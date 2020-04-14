@@ -114,7 +114,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		// Кнопка "Закрыть":
 		HWND closeButton = CreateWindow("Button", NULL,
-			WS_CHILD | WS_VISIBLE | BS_BITMAP /*| BS_OWNERDRAW */, 220, 5, 25, 25, 
+			WS_CHILD | WS_VISIBLE | BS_BITMAP, 220, 5, 25, 25, 
 			window, reinterpret_cast<HMENU>(CLOSE_BUTTON), NULL, NULL);
 
 		// Устанавливаем кнопке картинку красного круга, после чего выгружаем картинку:
