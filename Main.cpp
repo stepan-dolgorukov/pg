@@ -1,16 +1,18 @@
-#include "Main.h"
+п»ї#include "Main.h"
 #include "MainWindow.h"
 
+#include "WindowsFeatures.h"
 #include "AboutWindow.h"
 #include "InfoButton.h"
 
 #include "ControlButtons.h"
 #include "GenerationButton.h"
 
-// Дескриптор приложения:
+
+// Р”РµСЃРєСЂРёРїС‚РѕСЂ РїСЂРёР»РѕР¶РµРЅРёСЏ:
 HINSTANCE hInst;
 
-// Обработчик основного окна:
+// РџСЂРѕС†РµРґСѓСЂР° РѕСЃРЅРѕРІРЅРѕРіРѕ РѕРєРЅР°:
 LRESULT CALLBACK mainWindowProcedure(HWND window, UINT msg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -20,12 +22,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	UNREFERENCED_PARAMETER(nCmdShow);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
-	const char* mainWindowClassName = "Main Window";
-	const char* mainWindowCaption = "Генератор паролей by Dolgorukov";
+	const wchar_t* mainWindowClassName = TEXT("Main Window");
+	const wchar_t* mainWindowCaption = TEXT("Password Generator [by Dolgorukov]");
 
 	if (FindWindow(mainWindowClassName, mainWindowCaption)) {
-		MessageBox(NULL, "Генератор паролей уже запущен, незачем создавать ещё один процесс.",
-			"Факт дня!", MB_ICONERROR);
+		MessageBoxW(NULL, TEXT("Password Generator Р±С‹Р» Р·Р°РїСѓС‰РµРЅ СЂР°РЅРµРµ."),
+			TEXT("РќР°Рј С…РІР°С‚РёС‚ Рё РѕРґРЅРѕР№ Р·Р°РїСѓС‰РµРЅРЅРѕР№ РїСЂРѕРіСЂР°РјРјС‹..."), MB_ICONERROR);
 		return EXIT_FAILURE;
 	}
 
@@ -33,19 +35,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
-	// Задаем координаты так, чтобы окно появлялось по середине экрана:
 	uint16_t mainWindowWidth = 250; // x
 	uint16_t mainWindowHeight = 315; // y
 
-	// Функция получает координаты центра окна относительно его размеров:
 	std::pair<uint16_t, uint16_t> posPair = getWindowCenterCoordinates(mainWindowWidth, mainWindowHeight);
-
-	// это окно по умолчанию будет прозрачным, его плавное появление ...
-	// ... реализуется в сообщение WM_SIZE
 
 	HWND mainWindow = CreateWindowEx(WS_EX_LAYERED,
 		mainWindowClassName, mainWindowCaption, WS_POPUP, posPair.first, posPair.second,
 		mainWindowWidth, mainWindowHeight, NULL, NULL, hInst, NULL);
+
+	// РђРЅРёРјР°С†РёСЏ РїРѕСЏРІР»РµРЅРёСЏ РѕРєРЅР° РІ СЃРѕРѕР±С‰РµРЅРёРё WM_SIZE
+	// РќР° С‚РµРєСѓС‰РёР№ РјРѕРјРµРЅС‚ РѕРєРЅРѕ РЅРµ РІРёРґРЅРѕ
 
 	if (FAILED(mainWindow)) {
 		return EXIT_FAILURE;
@@ -55,8 +55,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	ShowWindow(mainWindow, SW_SHOWNORMAL);
 
 	MSG msg;
-	// подключаем таблицу акселераторов, едит-контролы начинают работать шустрее
-	HACCEL hAcc = LoadAccelerators(hInst, "Acc Table");
+	// РўР°Р±Р»РёС†Р° Р°РєСЃРµР»РµСЂР°С‚РѕСЂРѕРІ, СЃ РЅРµР№ РєРѕРЅС‚СЂРѕР»С‹ СЂР°Р±РѕС‚Р°СЋС‚ С€СѓСЃС‚СЂРµРµ
+	HACCEL hAcc = LoadAccelerators(hInst, NULL);
 
 	while (GetMessage(&msg, NULL, 0, 0)) {
 		if (!TranslateAccelerator(mainWindow, hAcc, &msg)) {
@@ -73,24 +73,14 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 	static bool checkBoxStatuses[5] = { true, true, true, true, true };
 	static HWND numberOfPasswordsEditControl, passwordsLengthEditControl;
 
-	// Шрифты будут использоваться в WM_PAINT, подгружаются ...
-	// ... в WM_CREATE
+	// РћР±СЉСЏРІР»СЏРµРј РїРµСЂРµРјРµРЅРЅС‹Рµ РїРѕРґ С€СЂРёС„С‚С‹, РєРѕС‚РѕСЂС‹Рµ Р±СѓРґСѓС‚ Р·Р°РґРµР№СЃС‚РІРѕРІР°РЅС‹ РІ СЃРѕРѕР±С‰РµРЅРёРµ WM_PAINT
+	// РЁСЂРёС„С‚С‹ РёРЅРёС†РёР°Р»РёР·РёСЂСѓСЋС‚СЃСЏ РІ СЃРѕРѕР±С‰РµРЅРёРё WM_CREATE
 	static HFONT captionFont, textFont;
 
 	switch (message)
 	{
 
-	case WM_KEYDOWN: {
-		if (LOWORD(wParam) == VK_TAB) {
-			SetFocus(passwordsLengthEditControl);
-		}
-
-		break;
-	}
-
-
-	// Делаем плавную анимацию поялвения окна, когда мы его разворачиваем
-	// из панели задач:
+	// РљРѕРіРґР° РѕРєРЅРѕ РїРѕСЏРІР»СЏРµС‚СЃСЏ Рё СЂР°Р·РІРѕСЂР°С‡РёРІР°РµС‚СЃСЏ СЃ РїР»Р°РІРЅРѕР№ Р°РЅРёРјР°С†РёРµР№ 
 	case WM_SIZE: {
 		if (LOWORD(wParam) == SIZE_RESTORED) {
 			std::thread thr([window] {
@@ -103,95 +93,88 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 		break;
 	}
 
+	// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёР№ РєСѓСЂСЃРѕСЂ, РєРѕРіРґР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ ...
+	// ... РїРµСЂРµС‚Р°СЃРєРёРІР°РµС‚ РѕРєРЅРѕ
+	case WM_MOVING: {
+		SetCursor(LoadCursor(NULL, IDC_SIZEALL));
+		break;
+	}
+
 	case WM_CREATE: {
 
-		// Подгрузка шрифтов:
 		captionFont = CreateFont(22, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0,
-			DEFAULT_QUALITY, FF_SWISS, "Segoe UI");
+			DEFAULT_QUALITY, FF_SWISS, TEXT("Segoe UI"));
 
 		textFont = CreateFont(18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0,
-			DEFAULT_QUALITY, FF_SWISS, "Segoe UI");
+			DEFAULT_QUALITY, FF_SWISS, TEXT("Segoe UI"));
 
-		// Кнопка "Закрыть":
-		HWND closeButton = CreateWindow("Button", NULL,
+		// РљРЅРѕРїРєР° "Р—Р°РєСЂС‹С‚СЊ" (РєСЂР°СЃРЅРѕРіРѕ С†РІРµС‚Р°):
+		HWND closeButton = CreateWindow(TEXT("Button"), NULL,
 			WS_CHILD | WS_VISIBLE | BS_BITMAP, 220, 5, 25, 25, 
 			window, reinterpret_cast<HMENU>(CLOSE_BUTTON), NULL, NULL);
 
-		// Устанавливаем кнопке картинку красного круга, после чего выгружаем картинку:
+		// РџРѕРґРіСЂСѓР¶Р°РµРј РёРєРѕРЅРєСѓ РґР»СЏ РєРЅРѕРїРєРё РёР· СЂРµСЃСѓСЂСЃРѕРІ:
 		HBITMAP closeButtonBitmap = LoadBitmap(GetModuleHandle(NULL),
 			MAKEINTRESOURCE(IDB_CLOSE_BUTTON));
 
+		// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РёРєРѕРЅРєСѓ РєРЅРѕРїРєРµ:
 		SendMessage(closeButton, BM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>(closeButtonBitmap));
-		DeleteObject(closeButtonBitmap);
+		DeleteObject(closeButtonBitmap); // Р’С‹РіСЂСѓР¶Р°РµРј РёРєРѕРЅРєСѓ РёР· РїР°РјСЏС‚Рё
 
-		// Устанавливаем отдельную процедуру для кнопки, чтобы изменять курсор при ...
-		// ... наведении на кнопку:
+		// "РљРЅРѕРїРѕС‡РЅР°СЏ" РїСЂРѕС†РµРґСѓСЂР° (СЂСѓРєРѕРїРёСЃ.) РґР»СЏ РѕС‚СЂР°Р±РѕС‚РєРё РЅРµРѕР±С…РѕРґРёРјС‹С… СЃРѕРѕР±С‰РµРЅРёР№:
 		SetWindowSubclass(closeButton, controlButtonProcedure, 0, 0);
 
-		// Кнопка "Свернуть":
-		HWND minimizeButton = CreateWindow("Button", NULL,
+		// РљРЅРѕРїРєР° "РЎРІРµСЂРЅСѓС‚СЊ" (Р¶С‘Р»С‚РѕРіРѕ С†РІРµС‚Р°):
+		HWND minimizeButton = CreateWindow(TEXT("Button"), NULL,
 			WS_CHILD | WS_VISIBLE | BS_BITMAP, 190, 5, 25, 25, window, 
 			reinterpret_cast<HMENU>(MINIMIZE_BUTTON), NULL, NULL);
 
-		// Подгружаем картинку из ресурсов:
+		// РџРѕРґРіСЂСѓР¶Р°РµРј РёРєРѕРЅРєСѓ РґР»СЏ РєРЅРѕРїРєРё РёР· СЂРµСЃСѓСЂСЃРѕРІ:
 		HBITMAP minimizeButtonBitmap = LoadBitmap(GetModuleHandle(NULL),
 			MAKEINTRESOURCE(IDB_MINIMIZE_BUTTON));
 
-		// Устанавливаем аналогичную процедуру, что и ранее, для кнопки минимизации:
-		SetWindowSubclass(minimizeButton, controlButtonProcedure, 0, 0);
-
-		// Устанавливаем кнопке картинку жёлтого круга:
+		// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РєРёРєРѕРЅРєСѓ РєРЅРѕРїРєРµ:
 		SendMessage(minimizeButton, BM_SETIMAGE, IMAGE_BITMAP, 
 			reinterpret_cast<LPARAM>(minimizeButtonBitmap));
-		DeleteObject(minimizeButtonBitmap); // выгружаем картинку
 
-		// Поле ввода "Количество паролей":
-		numberOfPasswordsEditControl = CreateWindow("Edit", "64", // Текст по умолчанию: 64
+		DeleteObject(minimizeButtonBitmap); // Р’С‹РіСЂСѓР¶Р°РµРј РёРєРѕРЅРєСѓ РёР· РїР°РјСЏС‚Рё
+
+		// РђРЅР°Р»РѕРіРёС‡РЅРѕ СЃ РєРЅРѕРїРєРѕР№ "Р—Р°РєСЂС‹С‚СЊ":
+		SetWindowSubclass(minimizeButton, controlButtonProcedure, 0, 0);
+
+		// РџРѕР»Рµ РІРІРѕРґР° "РљРѕР»РёС‡РµСЃС‚РІРѕ РїР°СЂРѕР»РµР№":
+		numberOfPasswordsEditControl = CreateWindow(TEXT("Edit"), TEXT("64"),
 			WS_CHILD | WS_VISIBLE, 195, 49, 40, 20, window, NULL, NULL, NULL);
 
-		SendMessage(numberOfPasswordsEditControl, WM_SETFONT, reinterpret_cast<WPARAM>(textFont), TRUE);
+		SendMessage(numberOfPasswordsEditControl, WM_SETFONT, reinterpret_cast<WPARAM>(textFont), 1);
 
-		// Поле ввода "Длина каждого пароля":
-		passwordsLengthEditControl = CreateWindow("Edit", "32", // Текст по умолчанию: 32
+		// РџРѕР»Рµ РІРІРѕРґР° "Р”Р»РёРЅР° РєР°Р¶РґРѕРіРѕ РїР°СЂРѕР»СЏ":
+		passwordsLengthEditControl = CreateWindow(TEXT("Edit"), TEXT("32"),
 			WS_CHILD | WS_VISIBLE, 195, 72, 40, 20, window, NULL, NULL, NULL);
 
-		SendMessage(passwordsLengthEditControl, WM_SETFONT, reinterpret_cast<WPARAM>(textFont), TRUE);
+		SendMessage(passwordsLengthEditControl, WM_SETFONT, reinterpret_cast<WPARAM>(textFont), 1);
 
-		// Чекбоксы, переменные можно не вводить, нигде чекбоксы по имени не используются:
-		CreateWindow("Button", NULL,
-			WS_CHILD | WS_VISIBLE | BS_CHECKBOX | SS_WHITERECT,
-			10, 100, 15, 25, window, reinterpret_cast<HMENU>(3), hInst, NULL);
+		// РЎРѕР·РґР°РЅРёРµ С‡РµРєР±РѕРєСЃРѕРІ:
 
-		CreateWindow("Button", NULL,
-			WS_CHILD | WS_VISIBLE | BS_CHECKBOX | SS_WHITERECT,
-			10, 122, 15, 25, window, reinterpret_cast<HMENU>(4), hInst, NULL);
-
-		CreateWindow("Button", NULL,
-			WS_CHILD | WS_VISIBLE | BS_CHECKBOX | SS_WHITERECT,
-			10, 144, 15, 25, window, reinterpret_cast<HMENU>(5), hInst, NULL);
-
-		CreateWindow("Button", NULL,
-			WS_CHILD | WS_VISIBLE | BS_CHECKBOX | SS_WHITERECT,
-			10, 166, 15, 25, window, reinterpret_cast<HMENU>(6), hInst, NULL);
-
-		CreateWindow("Button", NULL,
-			WS_CHILD | WS_VISIBLE | BS_CHECKBOX | SS_WHITERECT,
-			10, 188, 15, 25, window, reinterpret_cast<HMENU>(7), hInst, NULL);
-
+		uint8_t height = 100;
 		for (uint8_t i = 3; i <= 7; i++) {
+			CreateWindow(TEXT("Button"), NULL,
+				WS_CHILD | WS_VISIBLE | BS_CHECKBOX | SS_WHITERECT,
+				10, height, 15, 25, window, reinterpret_cast<HMENU>(i), hInst, NULL);
 			CheckDlgButton(window, i, BST_CHECKED);
+			height += 22;
 		}
 
-		// Кнопка генерации:
-		HWND generationButton = CreateWindow("BUTTON", NULL,
+		// РљРЅРѕРїРєР° "РЎРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ РїР°СЂРѕР»Рё":
+		HWND generationButton = CreateWindow(TEXT("Button"), NULL,
 			WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 
 			10, 220, 230, 40, window, reinterpret_cast<HMENU>(GENERATE_BUTTON), hInst, NULL);
 
 		SetWindowSubclass(generationButton, generationButtonProcedure, NULL, NULL);
 
 
-		// Кнопка информации:
-		HWND infoButton = CreateWindow("BUTTON", NULL,
+		// РљРЅРѕРїРєР° "Рћ РїСЂРѕРіСЂР°РјРјРµ":
+		HWND infoButton = CreateWindow(TEXT("BUTTON"), NULL,
 			WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
 			10, 265, 230, 40, window, reinterpret_cast<HMENU>(INFO_BUTTON), hInst, NULL);
 
@@ -206,7 +189,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		case CLOSE_BUTTON: {
 
-			HWND aboutWindow = FindWindow("About Program Window", "Информация о программе");
+			HWND aboutWindow = FindWindow(L"About Program Window", L"Рћ РїСЂРѕРіСЂР°РјРјРµ Password Generator");
 
 			if (aboutWindow) {
 				std::thread thr(smoothWindowHide, aboutWindow, true);
@@ -215,7 +198,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 			smoothWindowHide(window, true);
 
-			// Производится выгрузка шрифтов:
+			// I?iecaiaeony aua?ocea o?eooia:
 			DeleteObject(captionFont);
 			DeleteObject(textFont);
 
@@ -225,7 +208,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		case MINIMIZE_BUTTON: {
 
-			HWND aboutWindow = FindWindow("About Program Window", "Информация о программе");
+			HWND aboutWindow = FindWindow(L"About Program Window", L"Рћ РїСЂРѕРіСЂР°РјРјРµ Password Generator");
 
 			if (aboutWindow) {
 				std::thread thr(smoothWindowHide, aboutWindow, true);
@@ -241,7 +224,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		case GENERATE_BUTTON: {
 
-			// Проверим значание чекбоксов за исключением ЧБ "Избегать повторений"
+			// I?iaa?ei cia?aiea ?aeaienia ca enee??aieai ?A "Ecaaaaou iiaoi?aiee"
 			uint8_t trueValuesAmount = 0;
 			for (uint8_t i = 0; i < (sizeof(checkBoxStatuses) - 1); i++) {
 				if (checkBoxStatuses[i]) {
@@ -249,20 +232,23 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 				}
 			}
 
+			// РљР°РІС‹С‡РєРё: В« В» 
+
 			if (!trueValuesAmount) {
 				MessageBox(window,
-					"Хотя бы у одного из чекбоксов должна стоять галочка.\nЧекбокс «Избегать повторений» независим.",
-					"Что-то явно пошло не так...", MB_ICONERROR);
+					TEXT("Р“Р°Р»РѕС‡РєР° РґРѕР»Р¶РЅР° СЃС‚РѕСЏС‚СЊ РєР°Рє РјРёРЅРёРјСѓРј Сѓ РѕРґРЅРѕРіРѕ РёР· С‡РµРєР±РѕРєСЃРѕРІ. Р§РµРєР±РѕРєСЃ В«РР·Р±РµРіР°С‚СЊ РїРѕРІС‚РѕСЂРµРЅРёР№В» РЅРµ СЃС‡РёС‚Р°РµС‚СЃСЏ."),
+					TEXT("РќСѓР¶РЅРѕ Р±С‹С‚СЊ РЅРµРјРЅРѕРіРѕ РїРѕРІРЅРёРјР°С‚РµР»СЊРЅРµРµ..."), MB_ICONERROR);
 				break;
 			}
 
-			// Работа с полями "Кол-во паролей" и "Длина каждого пароля":
+			// РЎС‡РёС‚С‹РІР°РµРј РёРЅС„РѕСЂРјР°С†РёСЋ СЃ РїРѕР»РµР№ "РљРѕР»РёС‡РµСЃС‚РІРѕ РїР°СЂРѕР»РµР№" Рё ...
+			// ... "Р”Р»РёРЅР° РєР°Р¶РґРѕРіРѕ РїР°СЂРѕР»СЏ":
 			char numberOfPasswordsBuffer[5];
 			char passwordsLengthBuffer[5];
 
-			GetWindowText(numberOfPasswordsEditControl, &numberOfPasswordsBuffer[0],
+			GetWindowTextA(numberOfPasswordsEditControl, &numberOfPasswordsBuffer[0],
 				sizeof(numberOfPasswordsBuffer));
-			GetWindowText(passwordsLengthEditControl, &passwordsLengthBuffer[0],
+			GetWindowTextA(passwordsLengthEditControl, &passwordsLengthBuffer[0],
 				sizeof(numberOfPasswordsBuffer));
 
 			uint16_t numberOfPasswords = static_cast<uint16_t>(atoi(numberOfPasswordsBuffer));
@@ -270,55 +256,56 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 			if (!numberOfPasswords && !passwordsLength) {
 				MessageBox(window, 
-					"Поле «Количество паролей» и «Длина каждого пароля» - ошибка в полях ввода",
-					"Ого, это же дабл-ошибка ввода...", MB_ICONERROR);
+					TEXT("РџРѕР»СЏ В«РљРѕР»-РІРѕ РїР°СЂРѕР»РµР№В» Рё В«Р”Р»РёРЅР° РєР°Р¶РґРѕРіРѕ РїР°СЂРѕР»СЏВ»"),
+					TEXT("РћС€РёР±РєР° РІРІРѕРґР°!"), MB_ICONERROR);
 				break;
 			}
 			else {
 				if (!numberOfPasswords || numberOfPasswords < 5 || numberOfPasswords > 4096) {
 					MessageBox(window, 
-						"Поле «Кол-во паролей» - ошибка ввода!\nМинимальное значение: 8, максимальное: 4096.",
-						"У-у-п-с! Давай проверим входные данные...", MB_ICONERROR);
+						TEXT("Р’РІРµРґРµРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РЅРµ СЏРІР»СЏРµС‚СЃСЏ С‡РёСЃР»РѕРІС‹Рј РёР»Рё РЅРµ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ РѕРіСЂР°РЅРёС‡РµРЅРёСЏРј.\nРњРёРЅРёРјР°Р»СЊРЅРѕРµ РєРѕР»-РІРѕ РїР°СЂРѕР»РµР№: 8, РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ: 4096."),
+						TEXT("РћС€РёР±РєР° РІРІРѕРґР°!"), MB_ICONERROR);
 					break;
 				}
 
 				if (!passwordsLength || passwordsLength < 4 || passwordsLength > 256) {
 					MessageBox(window, 
-						"Поле «Длина каждого пароля» - ошибка ввода!\nМинимальное значение: 4, максимальное: 256.",
-						"Чёрт! И в чём же заключается ошибка?", MB_ICONERROR);
+						TEXT("Р’РІРµРґРµРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РЅРµ СЏРІР»СЏРµС‚СЃСЏ С‡РёСЃР»РѕРІС‹Рј РёР»Рё РЅРµ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ РѕРіСЂР°РЅРёС‡РµРЅРёСЏРј\nРњРёРЅРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° РїР°СЂРѕР»СЏ: 4, РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ: 256."),
+						TEXT("РћС€РёР±РєР° РІРІРѕРґР°!"), MB_ICONERROR);
 					break;
 				}
 			}
 
-			// Получаем указатель на массив с паролями (Си-строки, поэтому двойной указатель) и время генерации паролей:
+			// Р¤СѓРЅРєС†РёСЏ РЅРёР¶Рµ РІРѕР·РІСЂР°С‰Р°РµС‚ РґРёРЅР°РјРёС‡РµСЃРєРёР№ РјР°СЃСЃРёРІ СЃ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹РјРё РїР°СЂРѕР»СЏРјРё, РІСЂРµРјСЏ РёС… РіРµРЅРµСЂР°С†РёРё
+			// РЈРєР°Р·Р°С‚РµР»СЊ РЅР° СѓРєР°Р·Р°С‚РµР»СЊ, С‚.Рє РјР°СЃСЃРёРІ СЃРѕСЃС‚РѕРёС‚ РёР· РЎРё-СЃС‚СЂРѕРє
 			std::pair<char**, uint16_t> genPair = generatePasswords(numberOfPasswords, passwordsLength, &checkBoxStatuses[0]);
 			
-			// создадим ссылки на полученные переменные для лучшей абстракции:
+			// РЎРѕР·РґР°СЋ СЃСЃС‹Р»РєРё РґР»СЏ Р±РѕР»СЊС€РµР№ Р°СЃСЃРѕС†РёР°С‚РёРІРЅРѕСЃС‚Рё:
 			char** &passwordsArray = genPair.first;
 			uint16_t &generationTime = genPair.second;
 
-			// Получаем полный путь к файлу:
-			char* outputFileFullPath = getOutputFileName(numberOfPasswords, passwordsLength);
+			// РџРѕР»СѓС‡Р°РµРј РїСѓС‚СЊ Рє С„Р°Р№Р»Сѓ РґР»СЏ Р·Р°РїРёСЃРё:
+			wchar_t* outputFileFullPath = getOutputFileName(numberOfPasswords, passwordsLength);
 
-			// Записываем пароли в файл по полученному пути:
+			// Р—Р°РїРёСЃС‹РІР°РµРј РїРѕ РїРѕР»СѓС‡РµРЅРЅРѕРјСѓ РїСѓС‚Рё:
 			uint16_t writingTime = writePasswordsArrayToFile(passwordsArray, passwordsLength, 
 				numberOfPasswords, outputFileFullPath);
 
-			// Уведомление об успешной записи в файл для пользователя:
-			char geBuf[10];
-			char wrBuf[10];
+			// РњР°СЃСЃРёРІС‹, РІ РєРѕС‚РѕСЂС‹Рµ Р±СѓРґСѓС‚ РїРёСЃР°С‚СЊСЃСЏ РІСЂРµРјСЏ Р·Р°РїРёСЃРё Рё РіРµРЅРµСЂР°С†РёРё:
+			wchar_t geBuf[10];
+			wchar_t wrBuf[10];
 
-			(generationTime != 0) ? sprintf(geBuf, "%u", generationTime) : sprintf(geBuf, "< 1");
-			(writingTime != 0) ? sprintf(wrBuf, "%u", writingTime) : sprintf(wrBuf, "< 1");
+			(generationTime != 0) ? wsprintf(geBuf, L"%u", generationTime) : wsprintf(geBuf, L"< 1");
+			(writingTime != 0) ? wsprintf(wrBuf, L"%u", writingTime) : wsprintf(wrBuf, L"< 1");
 
-			char messageWithFilePath[300];
-			sprintf(messageWithFilePath,
-				"Сгенерированные пароли записаны в файл '%s'\nВремя генерации: %s мс\nВремя записи: %s мс",
+			wchar_t messageWithFilePath[320];
+			wsprintf(messageWithFilePath,
+				L"РџР°СЂРѕР»Рё Р·Р°РїРёСЃР°РЅС‹ РІ С„Р°Р№Р» '%s'\nР’СЂРµРјСЏ РіРµРЅРµСЂР°С†РёРё: %s РјСЃ\nР’СЂРµРјСЏ Р·Р°РїРёСЃРё РІ С„Р°Р№Р»: %s РјСЃ",
 				outputFileFullPath, geBuf, wrBuf);
 
-			MessageBox(window, messageWithFilePath, "Наслаждайтесь!", MB_OK);
+			MessageBoxW(window, messageWithFilePath, TEXT("РќР°СЃР»Р°Р¶РґР°Р№С‚РµСЃСЊ!"), MB_OK);
 
-			// Освобождение памяти, выделенной для массива с паролями:
+			// Inaiai?aaiea iaiyoe, auaaeaiiie aey ianneaa n ia?ieyie:
 			for (uint16_t i = 0; i < numberOfPasswords; i++)
 				delete[] passwordsArray[i];
 
@@ -328,21 +315,18 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		case INFO_BUTTON:
 
-			if (FindWindow("About Program Window", "Информация о программе")) {
-				MessageBox(window, "Окно с информацией о программе уже открыто.", 
-					"Зачем кликать лишний раз?", MB_ICONERROR);
+			wchar_t* aboutWindowClassName = TEXT("About Program Window");
+			wchar_t* aboutWindowCaption = TEXT("Рћ РїСЂРѕРіСЂР°РјРјРµ Password Generator");
+
+			if (FindWindow(aboutWindowClassName, aboutWindowCaption)) {
+				MessageBox(window, TEXT("РћРєРЅРѕ Рѕ РїСЂРѕРіСЂР°РјРјРµ Р±С‹Р»Рѕ РѕС‚РєСЂС‹С‚Рѕ СЂР°РЅРµРµ."), 
+					TEXT("РћС€РёР±РєР°!"), MB_ICONERROR);
 				break;
 			}
-			 
-			// Регистрируем окно для показа информации о приложении:
-			char* aboutWindowClassName = "About Program Window";
-			char* aboutWindowCaption = "Информация о программе";
 
-			// Функция-обработчик информационного окна находится в файле AboutWindow.cpp
+			// Ooieoey-ia?aaio?ee eioi?iaoeiiiiai ieia iaoiaeony a oaeea AboutWindow.cpp
 			if (FAILED(registerWindowClass(aboutWindowClassName, aboutWindowProcedure, hInst))) {
-				MessageBox(window, "Не удалось зарегистрировать класс окна 'О программе'",
-					"Оу-оу, кажется у нас неприятности...", MB_ICONERROR);
-				break;
+				ExitProcess(EXIT_FAILURE);
 			};
 
 			uint16_t aboutWindowWeight = 250;
@@ -350,13 +334,12 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 			std::pair<uint16_t, uint16_t> posPair = getWindowCenterCoordinates(aboutWindowWeight, aboutWindowHeight);
 
-			HWND aboutWindow = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST, 
+			HWND aboutWindow = CreateWindowEx(WS_EX_LAYERED, 
 				aboutWindowClassName, aboutWindowCaption, WS_POPUP, posPair.first, posPair.second, 
-				aboutWindowWeight, aboutWindowHeight, window, NULL, hInst, NULL); // окно является дочерним по отношению к основному
+				aboutWindowWeight, aboutWindowHeight, window, NULL, hInst, NULL); // РћРєРЅРѕ "Рћ РїСЂРѕРіСЂР°РјРјРµ" - РґРѕС‡РµСЂРЅРµРµ РѕРєРЅРѕ РѕСЃРЅРѕРІРЅРѕРіРѕ РѕРєРЅР°
 
 			if (FAILED(aboutWindow)) {
-				MessageBox(window, "Не удалось создать окно 'О программе'",
-					"Приiхали...", MB_ICONERROR);
+				ExitProcess(EXIT_FAILURE);
 				break;
 			};
 
@@ -371,7 +354,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 			break;
 		}
 
-		// Переключение чекбосов, выставляем ему только 2 режима
+		// РЈСЃС‚Р°РЅРѕРІРєР° С‡РµРєР±РѕРєСЃР°Рј С‚РѕР»СЊРєРѕ 2 СЂРµР¶РёРјР°: "РІРєР»" Рё "РІС‹РєР»"
 		if (LOWORD(wParam) >= 3 && LOWORD(wParam) <= 7) {
 			checkBoxStatuses[wParam - 3] = setCheckBoxTrueOrFalse(window, static_cast<uint8_t>(wParam));
 		}
@@ -386,19 +369,19 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 		SetBkColor(hdc, RGB(29, 29, 29));
 		SetTextColor(hdc, RGB(255, 255, 255));
 
-		// Смысла нуль-терминатор отображать нет, поэтому используем функцию strlen
-		TextOut(hdc, 10, 6, "Генератор паролей", strlen("Генератор паролей"));
+		// РћС‚РѕР±СЂР°Р¶РµРЅРёРµ С‚РµРєСЃС‚Р°:
+		TextOut(hdc, 10, 6, TEXT("Р“РµРЅРµСЂР°С‚РѕСЂ РїР°СЂРѕР»РµР№"), strlen("Р“РµРЅРµСЂР°С‚РѕСЂ РїР°СЂРѕР»РµР№"));
 
 		SelectObject(hdc, textFont);
 
-		TextOut(hdc, 10, 52, "Кол-во паролей:", strlen("Кол-во паролей:"));
-		TextOut(hdc, 10, 74, "Длина каждого пароля:", strlen("Длина каждого пароля:"));
+		TextOut(hdc, 10, 52, TEXT("РљРѕР»-РІРѕ РїР°СЂРѕР»РµР№:"), strlen("РљРѕР»-РІРѕ РїР°СЂРѕР»РµР№:"));
+		TextOut(hdc, 10, 74, TEXT("Р”Р»РёРЅР° РєР°Р¶РґРѕРіРѕ РїР°СЂРѕР»СЏ:"), strlen("Р”Р»РёРЅР° РєР°Р¶РґРѕРіРѕ РїР°СЂРѕР»СЏ:"));
 
-		TextOut(hdc, 30, 103, "Использовать цифры", strlen("Использовать цифры"));
-		TextOut(hdc, 30, 125, "Использовать заглавные буквы", strlen("Использовать заглавные буквы"));
-		TextOut(hdc, 30, 147, "Использовать строчные буквы", strlen("Использовать строчные буквы"));
-		TextOut(hdc, 30, 169, "Использовать символы", strlen("Использовать символы"));
-		TextOut(hdc, 30, 191, "Избегать повторений", strlen("Избегать повторений"));
+		TextOut(hdc, 30, 103, TEXT("РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ С†РёС„СЂС‹"), strlen("РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ С†РёС„СЂС‹"));
+		TextOut(hdc, 30, 125, TEXT("РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р·Р°РіР»Р°РІРЅС‹Рµ Р±СѓРєРІС‹"), strlen("РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р·Р°РіР»Р°РІРЅС‹Рµ Р±СѓРєРІС‹"));
+		TextOut(hdc, 30, 147, TEXT("РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃС‚СЂРѕС‡РЅС‹Рµ Р±СѓРєРІС‹"), strlen("РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃС‚СЂРѕС‡РЅС‹Рµ Р±СѓРєРІС‹"));
+		TextOut(hdc, 30, 169, TEXT("РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃРёРјРІРѕР»С‹"), strlen("РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃРёРјРІРѕР»С‹"));
+		TextOut(hdc, 30, 191, TEXT("РР·Р±РµРіР°С‚СЊ РїРѕРІС‚РѕСЂРµРЅРёР№"), strlen("РР·Р±РµРіР°С‚СЊ РїРѕРІС‚РѕСЂРµРЅРёР№"));
 
 		EndPaint(window, &ps);
 		break;

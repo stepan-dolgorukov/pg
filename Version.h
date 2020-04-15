@@ -1,4 +1,4 @@
-#pragma once
+ο»Ώ#pragma once
 
-const char* version = "1.0";
-const char* releaseDate = "14 ΰοπελÿ 2020";
+const wchar_t* version = L"1.0";
+const wchar_t* releaseDate = L"14 Π°ΠΏΡ€ΠµΠ»Ρ 2020";

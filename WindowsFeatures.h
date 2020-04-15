@@ -1,11 +1,11 @@
-#pragma once
+п»ї#pragma once
 
-// 2-ой параметр: закрывается окно или нет (может сворачиваться)
-void	smoothWindowApprearance(HWND hWnd, bool isClosing); // плавное появление
-void	smoothWindowHide(HWND hWnd, bool isClosing); // плавное скрытие
+// 2-РѕР№ РїР°СЂР°РјРµС‚СЂ: Р·Р°РєСЂС‹РІР°РµС‚СЃСЏ РѕРєРЅРѕ РёР»Рё РЅРµС‚ (РјРѕР¶РµС‚ СЃРІРѕСЂР°С‡РёРІР°С‚СЊСЃСЏ)
+void	smoothWindowApprearance(HWND hWnd, bool isClosing); // РїР»Р°РІРЅРѕРµ РїРѕСЏРІР»РµРЅРёРµ
+void	smoothWindowHide(HWND hWnd, bool isClosing); // РїР»Р°РІРЅРѕРµ СЃРєСЂС‹С‚РёРµ
 
-// Функция, регистрирующая класс окна:
-ATOM	registerWindowClass(const char* winClassName, WNDPROC windowProcedure, HINSTANCE hInstance);
+// Р¤СѓРЅРєС†РёСЏ, СЂРµРіРёСЃС‚СЂРёСЂСѓСЋС‰Р°СЏ РєР»Р°СЃСЃ РѕРєРЅР°:
+ATOM	registerWindowClass(const wchar_t* winClassName, WNDPROC winProcedure, HINSTANCE hInstance);
 
-// Получение координат для окна относительно его ширины и высоты:
+// РџРѕР»СѓС‡РµРЅРёРµ РєРѕРѕСЂРґРёРЅР°С‚ РґР»СЏ РѕРєРЅР° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РµРіРѕ С€РёСЂРёРЅС‹ Рё РІС‹СЃРѕС‚С‹:
 std::pair<uint16_t, uint16_t>	getWindowCenterCoordinates(uint16_t xSize, uint16_t ySize);

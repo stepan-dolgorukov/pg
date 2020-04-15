@@ -1,4 +1,4 @@
-#include "Main.h"
+п»ї#include "Main.h"
 
 LRESULT CALLBACK infoButtonProcedure(HWND infoButWindow, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
@@ -13,7 +13,7 @@ LRESULT CALLBACK infoButtonProcedure(HWND infoButWindow, UINT msg, WPARAM wParam
 	case WM_PAINT: {
 
 		HFONT textFont = CreateFont(20, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0,
-			DEFAULT_QUALITY, FF_SWISS, "Segoe UI");
+			DEFAULT_QUALITY, FF_SWISS, L"Segoe UI");
 
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(infoButWindow, &ps);
@@ -29,14 +29,13 @@ LRESULT CALLBACK infoButtonProcedure(HWND infoButWindow, UINT msg, WPARAM wParam
 		GetClientRect(infoButWindow, &crect);
 		FillRect(hdc, &crect, backgroundBrush);
 
-		DrawText(hdc, "О программе", strlen("О программе"),
+		DrawText(hdc, TEXT("Рћ РїСЂРѕРіСЂР°РјРјРµ"), strlen("Рћ РїСЂРѕРіСЂР°РјРјРµ"),
 			&crect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
 		DeleteObject(textFont);
 		DeleteObject(backgroundBrush);
 
 		EndPaint(infoButWindow, &ps);
-
 		break;
 	}
 

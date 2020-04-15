@@ -1,8 +1,8 @@
-#pragma once
+п»ї#pragma once
 
 #define _CRT_SECURE_NO_WARNINGS
 
-// Необходимо для корректного отображения кастомных контролов:
+// РќРµРѕР±С…РѕРґРёРјРѕ РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕРіРѕ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РєР°СЃС‚РѕРјРЅС‹С… РєРѕРЅС‚СЂРѕР»РѕРІ:
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -14,11 +14,9 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include <cstdint>
 #include <commctrl.h>
 #include <thread>
+#include "resource.h" // СЂРµСЃСѓСЂСЃС‹ РїСЂРѕРµРєС‚Р°
 
-#include "WindowsFeatures.h"
-#include "resource.h" // ресурсы проекта
-
-// ID кнопок:
+// ID РєРЅРѕРїРѕРє:
 #define CLOSE_BUTTON 1
 #define MINIMIZE_BUTTON 2
 #define GENERATE_BUTTON 8

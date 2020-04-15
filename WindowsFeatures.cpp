@@ -1,4 +1,4 @@
-#include "Main.h"
+ï»¿#include "Main.h"
 
 void smoothWindowApprearance(HWND hWnd, bool isClosing) {
 	for (uint16_t i = 0; i <= 255; i++) {
@@ -25,9 +25,9 @@ void smoothWindowHide(HWND hWnd, bool isClosing) {
 	}
 }
 
-ATOM registerWindowClass(const char* winClassName, WNDPROC windowProcedure, HINSTANCE hInstance)
+ATOM registerWindowClass(const wchar_t* winClassName, WNDPROC windowProcedure, HINSTANCE hInstance)
 {
-	WNDCLASSEX windowClass = { 0 }; // ñòðóêòóðà îêíà
+	WNDCLASSEX windowClass{ 0 }; // ÑÑ‚Ñ€ÑƒÐºÑ‚ÑƒÑ€Ð° Ð¾ÐºÐ½Ð°
 
 	windowClass.cbSize = sizeof(WNDCLASSEX);
 	windowClass.hInstance = hInstance;
@@ -36,9 +36,9 @@ ATOM registerWindowClass(const char* winClassName, WNDPROC windowProcedure, HINS
 	windowClass.lpszClassName = winClassName;
 	windowClass.lpfnWndProc = windowProcedure;
 	windowClass.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(APP_ICON));
-	windowClass.hIconSm = NULL;
+	windowClass.hIconSm = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(APP_ICON));
 	windowClass.lpszMenuName = NULL;
-	windowClass.style = CS_DROPSHADOW;
+	windowClass.style = CS_VREDRAW | CS_HREDRAW | CS_DROPSHADOW;
 
 	return RegisterClassEx(&windowClass);
 }

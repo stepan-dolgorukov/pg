@@ -1,5 +1,6 @@
-#include "Main.h"
-#include "ControlButtons.h" // кнопки "Закрыть", "Свернуть"
+п»ї#include "Main.h"
+#include "WindowsFeatures.h"
+#include "ControlButtons.h" // РєРЅРѕРїРєРё "Р—Р°РєСЂС‹С‚СЊ", "РЎРІРµСЂРЅСѓС‚СЊ"
 #include "Version.h"
 
 LRESULT CALLBACK aboutWindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
@@ -13,29 +14,29 @@ LRESULT CALLBACK aboutWindowProcedure(HWND window, UINT message, WPARAM wParam, 
 	case WM_CREATE: {
 
 		captionFont = CreateFont(22, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0,
-			DEFAULT_QUALITY, FF_SWISS, "Segoe UI");
+			DEFAULT_QUALITY, FF_SWISS, L"Segoe UI");
 
 		textFont = CreateFont(18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0,
-			DEFAULT_QUALITY, FF_SWISS, "Segoe UI");
+			DEFAULT_QUALITY, FF_SWISS, L"Segoe UI");
 
 		aboutProgramBitmap = LoadBitmap(GetModuleHandle(NULL),
 			MAKEINTRESOURCE(IDB_ABOUT_ICON));
 
-		// Кнопка "Закрыть":
-		HWND closeButton = CreateWindow("Button", NULL,
+		// РљРЅРѕРїРєР° "Р—Р°РєСЂС‹С‚СЊ":
+		HWND closeButton = CreateWindow(TEXT("Button"), NULL,
 			WS_CHILD | WS_VISIBLE | BS_BITMAP, 220, 5, 25, 25,
 			window, reinterpret_cast<HMENU>(CLOSE_BUTTON), NULL, NULL);
 
-		// Загружаем картинку из ресурсов:
+		// Р—Р°РіСЂСѓР¶Р°РµРј РєР°СЂС‚РёРЅРєСѓ РёР· СЂРµСЃСѓСЂСЃРѕРІ:
 		HBITMAP closeButtonBitmap = LoadBitmap(GetModuleHandle(NULL), 
 			MAKEINTRESOURCE(IDB_CLOSE_BUTTON));
 
-		// Устанавливаем картинку кнопке:
+		// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РєР°СЂС‚РёРЅРєСѓ РєРЅРѕРїРєРµ:
 		SendMessage(closeButton, BM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>(closeButtonBitmap));
-		DeleteObject(closeButtonBitmap); // картинка больше нам не понадобится, выгружаем её
+		DeleteObject(closeButtonBitmap); // РєР°СЂС‚РёРЅРєР° Р±РѕР»СЊС€Рµ РЅР°Рј РЅРµ РїРѕРЅР°РґРѕР±РёС‚СЃСЏ, РІС‹РіСЂСѓР¶Р°РµРј РµС‘
 
-		// Устанавливаем отдельную процедуру для кнопки, чтобы изменять курсор при ...
-		// ... наведении на кнопку:
+		// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РѕС‚РґРµР»СЊРЅСѓСЋ РїСЂРѕС†РµРґСѓСЂСѓ РґР»СЏ РєРЅРѕРїРєРё, С‡С‚РѕР±С‹ РёР·РјРµРЅСЏС‚СЊ РєСѓСЂСЃРѕСЂ РїСЂРё ...
+		// ... РЅР°РІРµРґРµРЅРёРё РЅР° РєРЅРѕРїРєСѓ:
 		SetWindowSubclass(closeButton, controlButtonProcedure, 0, 0);
 
 		break;
@@ -50,7 +51,7 @@ LRESULT CALLBACK aboutWindowProcedure(HWND window, UINT message, WPARAM wParam, 
 		SetTextColor(hdc, RGB(255, 255, 255));
 		SelectObject(hdc, captionFont);
 
-		TextOut(hdc, 10, 6, "Информация о программе", strlen("Информация о программе"));
+		TextOut(hdc, 10, 6, TEXT("РРЅС„РѕСЂРјР°С†РёСЏ Рѕ РїСЂРѕРіСЂР°РјРјРµ"), strlen("РРЅС„РѕСЂРјР°С†РёСЏ Рѕ РїСЂРѕРіСЂР°РјРјРµ"));
 
 		HDC bitmapHdc = CreateCompatibleDC(NULL);
 		SelectObject(bitmapHdc, aboutProgramBitmap);
@@ -58,26 +59,26 @@ LRESULT CALLBACK aboutWindowProcedure(HWND window, UINT message, WPARAM wParam, 
 		RECT rect;
 		GetWindowRect(window, &rect);
 
-		// Рассчёты производятся относительно размеров окна, в котором будет находиться изображение
-		// Высота - 250 пикс., ширина - 250 пикс.
+		// Р Р°СЃСЃС‡С‘С‚С‹ РїСЂРѕРёР·РІРѕРґСЏС‚СЃСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ СЂР°Р·РјРµСЂРѕРІ РѕРєРЅР°, РІ РєРѕС‚РѕСЂРѕРј Р±СѓРґРµС‚ РЅР°С…РѕРґРёС‚СЊСЃСЏ РёР·РѕР±СЂР°Р¶РµРЅРёРµ
+		// Р’С‹СЃРѕС‚Р° - 250 РїРёРєСЃ., С€РёСЂРёРЅР° - 250 РїРёРєСЃ.
 		uint8_t picX = static_cast<uint8_t>((rect.right - rect.left - 128) / 2);
 		uint8_t picY = static_cast<uint8_t>(((rect.top - rect.bottom - 128) - 40) / 2);
 
 		BitBlt(hdc, picX, picY, 128, 128, bitmapHdc, 0, 0, SRCCOPY);
 		SelectObject(hdc, textFont);
 
-		// Получаем координаты левого верхнего и правого нижнего углов клиентской части угла
+		// РџРѕР»СѓС‡Р°РµРј РєРѕРѕСЂРґРёРЅР°С‚С‹ Р»РµРІРѕРіРѕ РІРµСЂС…РЅРµРіРѕ Рё РїСЂР°РІРѕРіРѕ РЅРёР¶РЅРµРіРѕ СѓРіР»РѕРІ РєР»РёРµРЅС‚СЃРєРѕР№ С‡Р°СЃС‚Рё СѓРіР»Р°
 		GetClientRect(window, &rect);
 
-		// Изменяем эти значения, чтобы уменьшить этот прямоугольник, вследствие чего текст будет находиться ниже
+		// РР·РјРµРЅСЏРµРј СЌС‚Рё Р·РЅР°С‡РµРЅРёСЏ, С‡С‚РѕР±С‹ СѓРјРµРЅСЊС€РёС‚СЊ СЌС‚РѕС‚ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє, РІСЃР»РµРґСЃС‚РІРёРµ С‡РµРіРѕ С‚РµРєСЃС‚ Р±СѓРґРµС‚ РЅР°С…РѕРґРёС‚СЊСЃСЏ РЅРёР¶Рµ
 		rect.top = 195;
 
-		// Отображаем версию и дату релиза приложения:
-		char infoText[64];
-		sprintf(infoText, "Версия %s, релиз от %s\r\nАвтор: Dolgorukov", version, releaseDate);
+		// РћС‚РѕР±СЂР°Р¶Р°РµРј РІРµСЂСЃРёСЋ Рё РґР°С‚Сѓ СЂРµР»РёР·Р° РїСЂРёР»РѕР¶РµРЅРёСЏ:
+		wchar_t infoText[64];
+		wsprintf(infoText, L"Р’РµСЂСЃРёСЏ %s, СЂРµР»РёР· РѕС‚ %s\r\nРђРІС‚РѕСЂ: Dolgorukov", version, releaseDate);
 
-		// Смысла отображать нуль-терминатор нет, поэтому используем strlen:
-		DrawText(hdc, infoText, static_cast<int>(strlen(infoText)), &rect, DT_CENTER);
+		// РЎРјС‹СЃР»Р° РѕС‚РѕР±СЂР°Р¶Р°С‚СЊ РЅСѓР»СЊ-С‚РµСЂРјРёРЅР°С‚РѕСЂ РЅРµС‚, РїРѕСЌС‚РѕРјСѓ РёСЃРїРѕР»СЊР·СѓРµРј strlen:
+		DrawText(hdc, infoText, sizeof(infoText) / sizeof(wchar_t), &rect, DT_CENTER);
 
 		DeleteDC(bitmapHdc);
 
@@ -89,10 +90,10 @@ LRESULT CALLBACK aboutWindowProcedure(HWND window, UINT message, WPARAM wParam, 
 
 		if (LOWORD(wParam) == CLOSE_BUTTON) {
 
-			// Выгрузка большой иконки приложения:
+			// Р’С‹РіСЂСѓР·РєР° Р±РѕР»СЊС€РѕР№ РёРєРѕРЅРєРё РїСЂРёР»РѕР¶РµРЅРёСЏ:
 			DeleteObject(aboutProgramBitmap);
 
-			// Выгрузка шрифтов:
+			// Р’С‹РіСЂСѓР·РєР° С€СЂРёС„С‚РѕРІ:
 			DeleteObject(captionFont);
 			DeleteObject(textFont);
 

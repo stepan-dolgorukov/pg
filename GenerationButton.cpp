@@ -1,4 +1,4 @@
-#include "Main.h"
+п»ї#include "Main.h"
 
 LRESULT CALLBACK generationButtonProcedure(HWND genButWindow, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
@@ -13,7 +13,7 @@ LRESULT CALLBACK generationButtonProcedure(HWND genButWindow, UINT msg, WPARAM w
 	case WM_PAINT: {
 
 		HFONT textFont = CreateFont(20, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0,
-			DEFAULT_QUALITY, FF_SWISS, "Segoe UI");
+			DEFAULT_QUALITY, FF_SWISS, L"Segoe UI");
 
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(genButWindow, &ps);
@@ -29,7 +29,7 @@ LRESULT CALLBACK generationButtonProcedure(HWND genButWindow, UINT msg, WPARAM w
 		GetClientRect(genButWindow, &crect);
 		FillRect(hdc, &crect, backgroundBrush);
 
-		DrawText(hdc, "Сгенерировать пароли", strlen("Сгенерировать пароли"),
+		DrawText(hdc, TEXT("РЎРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ РїР°СЂРѕР»Рё"), strlen("РЎРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ РїР°СЂРѕР»Рё"),
 			&crect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
 		DeleteObject(textFont);
@@ -53,7 +53,7 @@ LRESULT CALLBACK generationButtonProcedure(HWND genButWindow, UINT msg, WPARAM w
 
 	case WM_MOUSELEAVE: {
 		isMouseOnButton = false;
-		InvalidateRect(genButWindow, NULL, true); // перерисовка окна
+		InvalidateRect(genButWindow, NULL, true); // РїРµСЂРµСЂРёСЃРѕРІРєР° РѕРєРЅР°
 		break;
 	}
 

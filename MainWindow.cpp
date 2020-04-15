@@ -1,4 +1,4 @@
-#include "Main.h"
+п»ї#include "Main.h"
 
 #include <string>
 #include <random> // (std::random_device, std::mt19937)
@@ -18,9 +18,9 @@ std::pair<char**, uint16_t> generatePasswords(uint16_t numberOfPasswords, uint16
 	uint32_t startTime = GetTickCount();
 
 	std::random_device rd;
-	std::mt19937 mersenne(rd()); // инициализируем Вихрь Мерсенна случайным стартовым числом
+	std::mt19937 mersenne(rd()); // РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј Р’РёС…СЂСЊ РњРµСЂСЃРµРЅРЅР° СЃР»СѓС‡Р°Р№РЅС‹Рј СЃС‚Р°СЂС‚РѕРІС‹Рј С‡РёСЃР»РѕРј
 
-	// Создаём ссылки на значения для абстракции:
+	// РЎРѕР·РґР°С‘Рј СЃСЃС‹Р»РєРё РЅР° Р·РЅР°С‡РµРЅРёСЏ РґР»СЏ Р°Р±СЃС‚СЂР°РєС†РёРё:
 	bool
 		&useNumbers = cbValues[0],
 		&useCapLetters = cbValues[1],
@@ -38,8 +38,8 @@ std::pair<char**, uint16_t> generatePasswords(uint16_t numberOfPasswords, uint16
 
 	bool noFirstAdd = false;
 
-	// Алфафит чисел будет хоть как подгружаться первым,
-	// проверка на непервое добавление (noFirstAdd) не нужна
+	// РђР»С„Р°С„РёС‚ С‡РёСЃРµР» Р±СѓРґРµС‚ С…РѕС‚СЊ РєР°Рє РїРѕРґРіСЂСѓР¶Р°С‚СЊСЃСЏ РїРµСЂРІС‹Рј,
+	// РїСЂРѕРІРµСЂРєР° РЅР° РЅРµРїРµСЂРІРѕРµ РґРѕР±Р°РІР»РµРЅРёРµ (noFirstAdd) РЅРµ РЅСѓР¶РЅР°
 	
 	if (useNumbers) {
 		strcpy(alphabet, numbers);
@@ -83,25 +83,25 @@ std::pair<char**, uint16_t> generatePasswords(uint16_t numberOfPasswords, uint16
 
 	char** buf = new char*[numberOfPasswords];
 
-	// Переменные для хранения текущего (сгенерированного) символа ...
-	// ... и символа, сгенерированного на предыдущем шаге
+	// РџРµСЂРµРјРµРЅРЅС‹Рµ РґР»СЏ С…СЂР°РЅРµРЅРёСЏ С‚РµРєСѓС‰РµРіРѕ (СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅРѕРіРѕ) СЃРёРјРІРѕР»Р° ...
+	// ... Рё СЃРёРјРІРѕР»Р°, СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅРѕРіРѕ РЅР° РїСЂРµРґС‹РґСѓС‰РµРј С€Р°РіРµ
 	char 
 		currentChar = 0, 
 		previousChar = 0;
 
 	for (uint16_t i = 0; i < numberOfPasswords; i++) {
-		buf[i] = new char[passwordsLength + 1]; // выделение памяти под один пароль
+		buf[i] = new char[passwordsLength + 1]; // РІС‹РґРµР»РµРЅРёРµ РїР°РјСЏС‚Рё РїРѕРґ РѕРґРёРЅ РїР°СЂРѕР»СЊ
 
-		// Заполняем пароль допустимыми символами:
+		// Р—Р°РїРѕР»РЅСЏРµРј РїР°СЂРѕР»СЊ РґРѕРїСѓСЃС‚РёРјС‹РјРё СЃРёРјРІРѕР»Р°РјРё:
 		for (uint16_t k = 0; k < passwordsLength; k++) {
 			
-			/* % - деление с остатком,
-			rand() возвращает значение между 0 и RAND_MAX (32767) */
+			/* % - РґРµР»РµРЅРёРµ СЃ РѕСЃС‚Р°С‚РєРѕРј,
+			rand() РІРѕР·РІСЂР°С‰Р°РµС‚ Р·РЅР°С‡РµРЅРёРµ РјРµР¶РґСѓ 0 Рё RAND_MAX (32767) */
 
 			currentChar = alphabet[mersenne() % nullTerminatorPosition];
 
-			if (avoidRepeat && tolower(previousChar) == tolower(currentChar)) { // если символы совпали, то ...
-				--k; // ... возвращаемся на шаг назад. На следующем шаге символ будет перезаписан в массив
+			if (avoidRepeat && tolower(previousChar) == tolower(currentChar)) { // РµСЃР»Рё СЃРёРјРІРѕР»С‹ СЃРѕРІРїР°Р»Рё, С‚Рѕ ...
+				--k; // ... РІРѕР·РІСЂР°С‰Р°РµРјСЃСЏ РЅР° С€Р°Рі РЅР°Р·Р°Рґ. РќР° СЃР»РµРґСѓСЋС‰РµРј С€Р°РіРµ СЃРёРјРІРѕР» Р±СѓРґРµС‚ РїРµСЂРµР·Р°РїРёСЃР°РЅ РІ РјР°СЃСЃРёРІ
 			}
 			else {
 				buf[i][k] = currentChar;
@@ -109,38 +109,38 @@ std::pair<char**, uint16_t> generatePasswords(uint16_t numberOfPasswords, uint16
 			}
 		}
 
-		// Добавляем нуль-терминатор в конец каждого пароля:
+		// Р”РѕР±Р°РІР»СЏРµРј РЅСѓР»СЊ-С‚РµСЂРјРёРЅР°С‚РѕСЂ РІ РєРѕРЅРµС† РєР°Р¶РґРѕРіРѕ РїР°СЂРѕР»СЏ:
 		buf[i][passwordsLength] = '\0';
 	}
 
 	return std::make_pair(buf, static_cast<uint16_t>(GetTickCount() - startTime));
 }
 
-char* getOutputFileName(int16_t passwordsAmount, int16_t passwordLength)
+wchar_t* getOutputFileName(uint16_t passwordsAmount, uint16_t passwordLength)
 {
 	SYSTEMTIME systemTime;
 	GetLocalTime(&systemTime);
 
-	// Записываем данные из структуры в название файла:
-	char fileName[50];
-	sprintf(fileName, "(P = %u, L = %u) %u.%u.%u %u-%u-%u-%u.txt",
+	// Р—Р°РїРёСЃС‹РІР°РµРј РґР°РЅРЅС‹Рµ РёР· СЃС‚СЂСѓРєС‚СѓСЂС‹ РІ РЅР°Р·РІР°РЅРёРµ С„Р°Р№Р»Р°:
+	wchar_t fileName[50];
+	wsprintf(fileName, L"(P = %u, L = %u) %u.%u.%u %u-%u-%u-%u.txt",
 		passwordsAmount, passwordLength,
 		systemTime.wMonth, systemTime.wDay, systemTime.wYear,
 		systemTime.wHour, systemTime.wMinute, systemTime.wSecond, systemTime.wMilliseconds);
 
-	char* outputFilePath = new char[MAX_PATH]; // #define MAX_PATH 260
+	wchar_t* outputFilePath = new wchar_t[MAX_PATH]; // #define MAX_PATH 260
 	GetCurrentDirectory(MAX_PATH, outputFilePath);
 
-	strcat(outputFilePath, "\\");
-	strcat(outputFilePath, fileName);
+	wcscat(outputFilePath, L"\\");
+	wcscat(outputFilePath, fileName);
 	return outputFilePath; 
 }
 
-uint16_t writePasswordsArrayToFile(char** arr, uint16_t passwordLength, uint16_t passwordsAmount, char* fileFullPath) {
+uint16_t writePasswordsArrayToFile(char** arr, uint16_t passwordLength, uint16_t passwordsAmount, wchar_t* fileFullPath) {
 
 	uint32_t startTime = GetTickCount();
 
-	HANDLE outputFile = CreateFileA(fileFullPath, FILE_WRITE_DATA, FILE_SHARE_READ,
+	HANDLE outputFile = CreateFile(fileFullPath, FILE_WRITE_DATA, FILE_SHARE_READ,
 		NULL, OPEN_ALWAYS, 0, NULL);
 
 	uint16_t bufSize = passwordLength + 6;
@@ -163,7 +163,7 @@ uint16_t writePasswordsArrayToFile(char** arr, uint16_t passwordLength, uint16_t
 		delete[] buf;
 	}
 
-	// Закрытие файла:
+	// Р—Р°РєСЂС‹С‚РёРµ С„Р°Р№Р»Р°:
 	CloseHandle(outputFile);
 
 	return static_cast<uint16_t>(GetTickCount() - startTime);
