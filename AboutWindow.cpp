@@ -74,11 +74,15 @@ LRESULT CALLBACK aboutWindowProcedure(HWND window, UINT message, WPARAM wParam, 
 		rect.top = 195;
 
 		// Отображаем версию и дату релиза приложения:
-		wchar_t infoText[64];
-		wsprintf(infoText, L"Версия %s, релиз от %s\r\nАвтор: Dolgorukov", version, releaseDate);
+		wchar_t infoText[70];
+		wsprintf(infoText, L"Версия %s, релиз от %s\r\nАвтор: DolgorukovGTA", version, releaseDate);
 
-		// Смысла отображать нуль-терминатор нет, поэтому используем strlen:
-		DrawText(hdc, infoText, sizeof(infoText) / sizeof(wchar_t), &rect, DT_CENTER);
+		uint8_t nullTerminatorPos = 0;
+		while (infoText[nullTerminatorPos] != '\0') {
+			++nullTerminatorPos;
+		}
+
+		DrawText(hdc, infoText, nullTerminatorPos, &rect, DT_CENTER);
 
 		DeleteDC(bitmapHdc);
 
