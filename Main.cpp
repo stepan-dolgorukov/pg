@@ -55,6 +55,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	ShowWindow(mainWindow, SW_SHOWNORMAL);
 
 	MSG msg;
+
 	// Таблица акселераторов, с ней контролы работают шустрее
 	HACCEL hAcc = LoadAccelerators(hInst, NULL);
 
@@ -189,7 +190,8 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		case CLOSE_BUTTON: {
 
-			HWND aboutWindow = FindWindow(L"About Program Window", L"О программе Password Generator");
+			HWND aboutWindow = FindWindow(TEXT("About Program Window"), 
+				TEXT("О программе Password Generator"));
 
 			if (aboutWindow) {
 				std::thread thr(smoothWindowHide, aboutWindow, true);
@@ -208,7 +210,8 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		case MINIMIZE_BUTTON: {
 
-			HWND aboutWindow = FindWindow(L"About Program Window", L"О программе Password Generator");
+			HWND aboutWindow = FindWindow(TEXT("About Program Window"),
+				TEXT("О программе Password Generator"));
 
 			if (aboutWindow) {
 				std::thread thr(smoothWindowHide, aboutWindow, true);
@@ -224,7 +227,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		case GENERATE_BUTTON: {
 
-			// I?iaa?ei cia?aiea ?aeaienia ca enee??aieai ?A "Ecaaaaou iiaoi?aiee"
+			// Проверим значения чекбоксов кроме ЧБ "Избегать повторений"
 			uint8_t trueValuesAmount = 0;
 			for (uint8_t i = 0; i < (sizeof(checkBoxStatuses) - 1); i++) {
 				if (checkBoxStatuses[i]) {
@@ -324,7 +327,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 				break;
 			}
 
-			// Ooieoey-ia?aaio?ee eioi?iaoeiiiiai ieia iaoiaeony a oaeea AboutWindow.cpp
+			// Процедура окна "О программе" находится в файле AboutWindow.cpp
 			if (FAILED(registerWindowClass(aboutWindowClassName, aboutWindowProcedure, hInst))) {
 				ExitProcess(EXIT_FAILURE);
 			};
@@ -390,8 +393,11 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 	case WM_CTLCOLORSTATIC:
 		return reinterpret_cast<INT_PTR>(CreateSolidBrush(RGB(29, 29, 29)));
 
-	case WM_LBUTTONDOWN:
-		SendMessage(window, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+	// Трюк ниже позволяет перетаскивать окно за любую часть окна:
+	case WM_LBUTTONDOWN: // Ловим нажатие левой кнопки мыши
+
+		// Отправляемое сообщение буквально значит "Нажата ЛКМ на заголовке окна":
+		SendMessage(window, WM_NCLBUTTONDOWN, HTCAPTION, NULL);
 		break;
 
 	default:
