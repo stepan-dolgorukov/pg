@@ -8,17 +8,14 @@
 #include "ControlButtons.h"
 #include "GenerationButton.h"
 
-
 // Дескриптор приложения:
-HINSTANCE hInst;
+HINSTANCE hAppInstance;
 
-// Процедура основного окна:
 LRESULT CALLBACK mainWindowProcedure(HWND window, UINT msg, WPARAM wParam, LPARAM lParam);
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-	UNREFERENCED_PARAMETER(hInstance);
-	UNREFERENCED_PARAMETER(hPrevInstance);
+	// Неиспользуемые параметры:
 	UNREFERENCED_PARAMETER(nCmdShow);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -31,7 +28,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
-	if (FAILED(registerWindowClass(mainWindowClassName, mainWindowProcedure, hInst))) {
+	if (FAILED(registerWindowClass(mainWindowClassName, mainWindowProcedure, hInstance))) {
 		return EXIT_FAILURE;
 	}
 
@@ -40,27 +37,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	std::pair<uint16_t, uint16_t> posPair = getWindowCenterCoordinates(mainWindowWidth, mainWindowHeight);
 
-	HWND mainWindow = CreateWindowEx(WS_EX_LAYERED,
+	HWND hMainWindow = CreateWindowExW(WS_EX_LAYERED,
 		mainWindowClassName, mainWindowCaption, WS_POPUP, posPair.first, posPair.second,
-		mainWindowWidth, mainWindowHeight, NULL, NULL, hInst, NULL);
+		mainWindowWidth, mainWindowHeight, NULL, NULL, hAppInstance, NULL);
 
 	// Анимация появления окна в сообщении WM_SIZE
 	// На текущий момент окно не видно
 
-	if (FAILED(mainWindow)) {
+	if (FAILED(hMainWindow)) {
 		return EXIT_FAILURE;
 	}
 
-	UpdateWindow(mainWindow);
-	ShowWindow(mainWindow, SW_SHOWNORMAL);
+	UpdateWindow(hMainWindow);
+	ShowWindow(hMainWindow, SW_SHOWDEFAULT);
 
 	MSG msg;
 
 	// Таблица акселераторов, с ней контролы работают шустрее
-	HACCEL hAcc = LoadAccelerators(hInst, NULL);
+	HACCEL hAcc = LoadAccelerators(hInstance, NULL);
 
 	while (GetMessage(&msg, NULL, 0, 0)) {
-		if (!TranslateAccelerator(mainWindow, hAcc, &msg)) {
+		if (!TranslateAccelerator(hMainWindow, hAcc, &msg)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
@@ -160,8 +157,8 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 		uint8_t height = 100;
 		for (uint8_t i = 3; i <= 7; i++) {
 			CreateWindow(TEXT("Button"), NULL,
-				WS_CHILD | WS_VISIBLE | BS_CHECKBOX | SS_WHITERECT,
-				10, height, 15, 25, window, reinterpret_cast<HMENU>(i), hInst, NULL);
+				WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+				10, height, 15, 25, window, reinterpret_cast<HMENU>(i), NULL, NULL);
 			CheckDlgButton(window, i, BST_CHECKED);
 			height += 22;
 		}
@@ -169,15 +166,15 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 		// Кнопка "Сгенерировать пароли":
 		HWND generationButton = CreateWindow(TEXT("Button"), NULL,
 			WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 
-			10, 220, 230, 40, window, reinterpret_cast<HMENU>(GENERATE_BUTTON), hInst, NULL);
+			10, 220, 230, 40, window, reinterpret_cast<HMENU>(GENERATE_BUTTON), NULL, NULL);
 
 		SetWindowSubclass(generationButton, generationButtonProcedure, NULL, NULL);
 
 
 		// Кнопка "О программе":
-		HWND infoButton = CreateWindow(TEXT("BUTTON"), NULL,
+		HWND infoButton = CreateWindow(TEXT("Button"), NULL,
 			WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
-			10, 265, 230, 40, window, reinterpret_cast<HMENU>(INFO_BUTTON), hInst, NULL);
+			10, 265, 230, 40, window, reinterpret_cast<HMENU>(INFO_BUTTON), NULL, NULL);
 
 		SetWindowSubclass(infoButton, infoButtonProcedure, NULL, NULL);
 		break;
@@ -200,12 +197,11 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 			smoothWindowHide(window, true);
 
-			// I?iecaiaeony aua?ocea o?eooia:
+			// Выгружаем шрифты:
 			DeleteObject(captionFont);
 			DeleteObject(textFont);
 
 			ExitProcess(EXIT_SUCCESS);
-			break;
 		}
 
 		case MINIMIZE_BUTTON: {
@@ -222,7 +218,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 			SendMessage(window, WM_SYSCOMMAND, SC_MINIMIZE, lParam);
 			Sleep(300);
-			break;
+			return 0;
 		}
 
 		case GENERATE_BUTTON: {
@@ -328,7 +324,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 			}
 
 			// Процедура окна "О программе" находится в файле AboutWindow.cpp
-			if (FAILED(registerWindowClass(aboutWindowClassName, aboutWindowProcedure, hInst))) {
+			if (FAILED(registerWindowClass(aboutWindowClassName, aboutWindowProcedure, NULL))) {
 				ExitProcess(EXIT_FAILURE);
 			};
 
@@ -339,7 +335,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 			HWND aboutWindow = CreateWindowEx(WS_EX_LAYERED, 
 				aboutWindowClassName, aboutWindowCaption, WS_POPUP, posPair.first, posPair.second, 
-				aboutWindowWeight, aboutWindowHeight, window, NULL, hInst, NULL); // Окно "О программе" - дочернее окно основного окна
+				aboutWindowWeight, aboutWindowHeight, window, NULL, NULL, NULL); // Окно "О программе" - дочернее окно основного окна
 
 			if (FAILED(aboutWindow)) {
 				ExitProcess(EXIT_FAILURE);
@@ -387,11 +383,15 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 		TextOut(hdc, 30, 191, TEXT("Избегать повторений"), strlen("Избегать повторений"));
 
 		EndPaint(window, &ps);
-		break;
 	}
 
-	case WM_CTLCOLORSTATIC:
-		return reinterpret_cast<INT_PTR>(CreateSolidBrush(RGB(29, 29, 29)));
+	case WM_CTLCOLORSTATIC: {
+		HDC hDC = reinterpret_cast<HDC>(wParam);
+		COLORREF bc = RGB(29, 29, 29);
+		static HBRUSH hBrush = ::CreateSolidBrush(bc);
+		SetBkColor(hDC, bc);
+		return reinterpret_cast<INT_PTR>(hBrush);
+	}
 
 	// Трюк ниже позволяет перетаскивать окно за любую часть окна:
 	case WM_LBUTTONDOWN: // Ловим нажатие левой кнопки мыши

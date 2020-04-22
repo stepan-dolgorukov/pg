@@ -1,16 +1,16 @@
 ﻿#include "Main.h"
 
 
-LRESULT CALLBACK controlButtonProcedure(HWND window, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+LRESULT CALLBACK controlButtonProcedure(HWND hWindow, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	UNREFERENCED_PARAMETER(uIdSubclass);
 	UNREFERENCED_PARAMETER(dwRefData);
 
-	switch (msg)
+	switch (uMsg)
 	{
 
 	case WM_MOUSEHOVER: {
-		SendMessage(window, WM_SETCURSOR, 0, 0);
+		SendMessage(hWindow, WM_SETCURSOR, NULL, NULL);
 		break;
 	}
 
@@ -20,7 +20,7 @@ LRESULT CALLBACK controlButtonProcedure(HWND window, UINT msg, WPARAM wParam, LP
 	}
 
 	default:
-		return DefSubclassProc(window, msg, wParam, lParam);
+		return DefSubclassProc(hWindow, uMsg, wParam, lParam);
 	}
 
 	return 0;

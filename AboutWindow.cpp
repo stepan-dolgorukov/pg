@@ -110,6 +110,11 @@ LRESULT CALLBACK aboutWindowProcedure(HWND window, UINT message, WPARAM wParam, 
 		SendMessage(window, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 		break;
 
+	case WM_MOVING: {
+		SetCursor(LoadCursor(NULL, IDC_SIZEALL));
+		break;
+	}
+
 	default:
 		return DefWindowProc(window, message, wParam, lParam);
 
