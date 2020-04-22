@@ -388,7 +388,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 	case WM_CTLCOLORSTATIC: {
 		HDC hDC = reinterpret_cast<HDC>(wParam);
 		COLORREF bc = RGB(29, 29, 29);
-		static HBRUSH hBrush = ::CreateSolidBrush(bc);
+		static HBRUSH hBrush = CreateSolidBrush(bc);
 		SetBkColor(hDC, bc);
 		return reinterpret_cast<INT_PTR>(hBrush);
 	}
