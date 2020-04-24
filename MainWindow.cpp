@@ -143,7 +143,7 @@ uint16_t writePasswordsArrayToFile(char** arr, uint16_t passwordLength, uint16_t
 	HANDLE outputFile = CreateFile(fileFullPath, FILE_WRITE_DATA, FILE_SHARE_READ,
 		NULL, OPEN_ALWAYS, 0, NULL);
 
-	uint16_t bufSize = passwordLength + 6;
+	uint16_t bufSize = passwordLength + 8;
 
 	for (uint16_t i = 0; i < passwordsAmount; i++) {
 		char* buf = new char[bufSize];
