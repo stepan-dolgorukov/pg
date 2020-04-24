@@ -16,19 +16,21 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT msg, WPARAM wParam, LPARA
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
 	// Неиспользуемые параметры:
-	UNREFERENCED_PARAMETER(nCmdShow);
+	UNREFERENCED_PARAMETER(hInstance);
+	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
+	UNREFERENCED_PARAMETER(nCmdShow);
 
-	const wchar_t* mainWindowClassName = TEXT("Main Window");
-	const wchar_t* mainWindowCaption = TEXT("Password Generator [by Dolgorukov]");
+	LPCWSTR szMainWindowClassName = TEXT("Password Generator");
+	LPCWSTR szMainWindowCaption = TEXT("Password Generator [by Dolgorukov]");
 
-	if (FindWindow(mainWindowClassName, mainWindowCaption)) {
+	if (FindWindow(szMainWindowClassName, szMainWindowCaption)) {
 		MessageBoxW(NULL, TEXT("Password Generator был запущен ранее."),
 			TEXT("Нам хватит и одной запущенной программы..."), MB_ICONERROR);
 		return EXIT_FAILURE;
 	}
 
-	if (FAILED(registerWindowClass(mainWindowClassName, mainWindowProcedure, hInstance))) {
+	if (FAILED(registerWindowClass(szMainWindowClassName, mainWindowProcedure, hAppInstance))) {
 		return EXIT_FAILURE;
 	}
 
@@ -37,8 +39,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 	std::pair<uint16_t, uint16_t> posPair = getWindowCenterCoordinates(mainWindowWidth, mainWindowHeight);
 
-	HWND hMainWindow = CreateWindowExW(WS_EX_LAYERED,
-		mainWindowClassName, mainWindowCaption, WS_POPUP, posPair.first, posPair.second,
+	HWND hMainWindow = CreateWindowEx(WS_EX_LAYERED,
+		szMainWindowClassName, szMainWindowCaption, WS_POPUP, posPair.first, posPair.second,
 		mainWindowWidth, mainWindowHeight, NULL, NULL, hAppInstance, NULL);
 
 	// Анимация появления окна в сообщении WM_SIZE
@@ -49,7 +51,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	}
 
 	UpdateWindow(hMainWindow);
-	ShowWindow(hMainWindow, SW_SHOWDEFAULT);
+	ShowWindow(hMainWindow, SW_SHOWNORMAL);
 
 	MSG msg;
 
@@ -75,12 +77,11 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 	// Шрифты инициализируются в сообщении WM_CREATE
 	static HFONT captionFont, textFont;
 
-	switch (message)
-	{
+	switch (message) {
 
 	// Когда окно появляется и разворачивается с плавной анимацией 
 	case WM_SIZE: {
-		if (LOWORD(wParam) == SIZE_RESTORED) {
+		if (wParam == SIZE_RESTORED) {
 			std::thread thr([window] {
 				smoothWindowApprearance(window, false);
 			});
@@ -99,7 +100,6 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 	}
 
 	case WM_CREATE: {
-
 		captionFont = CreateFont(22, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0,
 			DEFAULT_QUALITY, FF_SWISS, TEXT("Segoe UI"));
 
@@ -142,13 +142,13 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		// Поле ввода "Количество паролей":
 		numberOfPasswordsEditControl = CreateWindow(TEXT("Edit"), TEXT("64"),
-			WS_CHILD | WS_VISIBLE, 195, 49, 40, 20, window, NULL, NULL, NULL);
+			WS_CHILD | WS_VISIBLE | ES_NUMBER, 195, 49, 40, 20, window, NULL, NULL, NULL);
 
 		SendMessage(numberOfPasswordsEditControl, WM_SETFONT, reinterpret_cast<WPARAM>(textFont), 1);
 
 		// Поле ввода "Длина каждого пароля":
 		passwordsLengthEditControl = CreateWindow(TEXT("Edit"), TEXT("32"),
-			WS_CHILD | WS_VISIBLE, 195, 72, 40, 20, window, NULL, NULL, NULL);
+			WS_CHILD | WS_VISIBLE | ES_NUMBER, 195, 72, 40, 20, window, NULL, NULL, NULL);
 
 		SendMessage(passwordsLengthEditControl, WM_SETFONT, reinterpret_cast<WPARAM>(textFont), 1);
 
@@ -182,8 +182,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 	case WM_COMMAND: {
 
-		switch (LOWORD(wParam))
-		{
+		switch (wParam) {
 
 		case CLOSE_BUTTON: {
 
@@ -231,8 +230,8 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 				}
 			}
 
-			// Кавычки: « » 
 
+			// Кавычки: « »
 			if (!trueValuesAmount) {
 				MessageBox(window,
 					TEXT("Галочка должна стоять как минимум у одного из чекбоксов. Чекбокс «Избегать повторений» не считается."),
@@ -275,11 +274,12 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 				}
 			}
 
+
 			// Функция ниже возвращает динамический массив с сгенерированными паролями, время их генерации
 			// Указатель на указатель, т.к массив состоит из Си-строк
 			std::pair<char**, uint16_t> genPair = generatePasswords(numberOfPasswords, passwordsLength, &checkBoxStatuses[0]);
 			
-			// Создаю ссылки для большей ассоциативности:
+			// Создаём ссылки для абстрактности:
 			char** &passwordsArray = genPair.first;
 			uint16_t &generationTime = genPair.second;
 
@@ -291,20 +291,20 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 				numberOfPasswords, outputFileFullPath);
 
 			// Массивы, в которые будут писаться время записи и генерации:
-			wchar_t geBuf[10];
-			wchar_t wrBuf[10];
+			WCHAR geBuf[10];
+			WCHAR wrBuf[10];
 
 			(generationTime != 0) ? wsprintf(geBuf, L"%u", generationTime) : wsprintf(geBuf, L"< 1");
 			(writingTime != 0) ? wsprintf(wrBuf, L"%u", writingTime) : wsprintf(wrBuf, L"< 1");
 
-			wchar_t messageWithFilePath[320];
+			wchar_t messageWithFilePath[400];
 			wsprintf(messageWithFilePath,
 				L"Пароли записаны в файл '%s'\nВремя генерации: %s мс\nВремя записи в файл: %s мс",
 				outputFileFullPath, geBuf, wrBuf);
 
 			MessageBoxW(window, messageWithFilePath, TEXT("Наслаждайтесь!"), MB_OK);
-
-			// Inaiai?aaiea iaiyoe, auaaeaiiie aey ianneaa n ia?ieyie:
+			;
+			// Высвобождения памяти:
 			for (uint16_t i = 0; i < numberOfPasswords; i++)
 				delete[] passwordsArray[i];
 
@@ -314,8 +314,8 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		case INFO_BUTTON:
 
-			wchar_t* aboutWindowClassName = TEXT("About Program Window");
-			wchar_t* aboutWindowCaption = TEXT("О программе Password Generator");
+			LPCWSTR aboutWindowClassName = TEXT("About Program Window");
+			LPCWSTR aboutWindowCaption = TEXT("О программе Password Generator");
 
 			if (FindWindow(aboutWindowClassName, aboutWindowCaption)) {
 				MessageBox(window, TEXT("Окно о программе было открыто ранее."), 
@@ -333,20 +333,20 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 			std::pair<uint16_t, uint16_t> posPair = getWindowCenterCoordinates(aboutWindowWeight, aboutWindowHeight);
 
-			HWND aboutWindow = CreateWindowEx(WS_EX_LAYERED, 
+			HWND hAboutWindow = CreateWindowEx(WS_EX_LAYERED, 
 				aboutWindowClassName, aboutWindowCaption, WS_POPUP, posPair.first, posPair.second, 
-				aboutWindowWeight, aboutWindowHeight, window, NULL, NULL, NULL); // Окно "О программе" - дочернее окно основного окна
+				aboutWindowWeight, aboutWindowHeight, NULL, NULL, hAppInstance, NULL); // Окно "О программе"
 
-			if (FAILED(aboutWindow)) {
+			if (FAILED(hAboutWindow)) {
 				ExitProcess(EXIT_FAILURE);
 				break;
 			};
 
-			UpdateWindow(aboutWindow);
-			ShowWindow(aboutWindow, SW_SHOWNORMAL);
+			UpdateWindow(hAboutWindow);
+			ShowWindow(hAboutWindow, SW_SHOWNORMAL);
 
-			std::thread thr([aboutWindow] {
-				smoothWindowApprearance(aboutWindow, false);
+			std::thread thr([hAboutWindow] {
+				smoothWindowApprearance(hAboutWindow, false);
 			});
 
 			thr.detach();
@@ -354,13 +354,12 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 		}
 
 		// Установка чекбоксам только 2 режима: "вкл" и "выкл"
-		if (LOWORD(wParam) >= 3 && LOWORD(wParam) <= 7) {
+		if (wParam >= 3 && wParam <= 7) {
 			checkBoxStatuses[wParam - 3] = setCheckBoxTrueOrFalse(window, static_cast<uint8_t>(wParam));
 		}
 	}
 
 	case WM_PAINT: {
-
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(window, &ps);
 
@@ -386,10 +385,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 	}
 
 	case WM_CTLCOLORSTATIC: {
-		HDC hDC = reinterpret_cast<HDC>(wParam);
-		COLORREF bc = RGB(29, 29, 29);
-		static HBRUSH hBrush = CreateSolidBrush(bc);
-		SetBkColor(hDC, bc);
+		static HBRUSH hBrush = CreateSolidBrush(RGB(29, 29, 29));
 		return reinterpret_cast<INT_PTR>(hBrush);
 	}
 
