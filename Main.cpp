@@ -267,14 +267,14 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 			else {
 				if (!numberOfPasswords || numberOfPasswords < 5 || numberOfPasswords > 4096) {
 					MessageBox(window, 
-						TEXT("Введеное значение не является числовым или не соответствует ограничениям.\nМинимальное кол-во паролей: 8, максимальное: 4096."),
+						TEXT("Введеное значение не соответствует ограничениям.\nМинимальное кол-во паролей: 5, максимальное: 4096."),
 						TEXT("Ошибка ввода!"), MB_ICONERROR);
 					break;
 				}
 
 				if (!passwordsLength || passwordsLength < 4 || passwordsLength > 256) {
 					MessageBox(window, 
-						TEXT("Введеное значение не является числовым или не соответствует ограничениям\nМинимальная длина пароля: 4, максимальная: 256."),
+						TEXT("Введеное значение не соответствует ограничениям\nМинимальная длина пароля: 4, максимальная: 256."),
 						TEXT("Ошибка ввода!"), MB_ICONERROR);
 					break;
 				}
