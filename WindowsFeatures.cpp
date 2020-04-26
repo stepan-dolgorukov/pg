@@ -1,46 +1,45 @@
 ﻿#include "Main.h"
 
-void smoothWindowApprearance(HWND hWnd, bool isClosing) {
+void smoothWindowApprearance(HWND hWindow, bool isClosing) {
 	for (uint16_t i = 0; i <= 255; i++) {
-		SetLayeredWindowAttributes(hWnd, 0, static_cast<unsigned char>(i), LWA_ALPHA);
+		SetLayeredWindowAttributes(hWindow, 0, static_cast<BYTE>(i), LWA_ALPHA);
 		Sleep(1);
 	}
 
 	if (isClosing) {
-		SendMessage(hWnd, WM_CLOSE, 0, 0);
-		DestroyWindow(hWnd);
+		SendMessage(hWindow, WM_CLOSE, NULL, NULL);
+		DestroyWindow(hWindow);
 	}
 }
 
-void smoothWindowHide(HWND hWnd, bool isClosing) {
+void smoothWindowHide(HWND hWindow, bool isClosing) {
 
 	for (int16_t i = 255; i >= 0; i--) {
-		SetLayeredWindowAttributes(hWnd, 0, static_cast<unsigned char>(i), LWA_ALPHA);
+		SetLayeredWindowAttributes(hWindow, 0, static_cast<BYTE>(i), LWA_ALPHA);
 		Sleep(1);
 	}
 
 	if (isClosing) {
-		SendMessage(hWnd, WM_CLOSE, 0, 0);
-		DestroyWindow(hWnd);
+		SendMessage(hWindow, WM_CLOSE, NULL, NULL);
+		DestroyWindow(hWindow);
 	}
 }
 
-ATOM registerWindowClass(const wchar_t* winClassName, WNDPROC windowProcedure, HINSTANCE hInstance)
+ATOM registerWindowClass(LPCWSTR winClassName, WNDPROC windowProcedure, HINSTANCE hInstance)
 {
-	WNDCLASSEX windowClass{ 0 }; // структура окна
+	WNDCLASSEX wc{}; // структура окна
 
-	windowClass.cbSize = sizeof(WNDCLASSEX);
-	windowClass.hInstance = hInstance;
-	windowClass.hbrBackground = reinterpret_cast<HBRUSH>(CreateSolidBrush(RGB(29, 29, 29)));
-	windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-	windowClass.lpszClassName = winClassName;
-	windowClass.lpfnWndProc = windowProcedure;
-	windowClass.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(APP_ICON));
-	windowClass.hIconSm = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(APP_ICON));
-	windowClass.lpszMenuName = NULL;
-	windowClass.style = CS_VREDRAW | CS_HREDRAW | CS_DROPSHADOW;
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.hInstance = hInstance;
+	wc.hbrBackground = reinterpret_cast<HBRUSH>(CreateSolidBrush(RGB(29, 29, 29)));
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.lpszClassName = winClassName;
+	wc.lpfnWndProc = windowProcedure;
+	wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(APP_ICON));
+	wc.lpszMenuName = NULL;
+	wc.style = CS_DROPSHADOW;
 
-	return RegisterClassEx(&windowClass);
+	return RegisterClassEx(&wc);
 }
 
 std::pair<uint16_t, uint16_t> getWindowCenterCoordinates(uint16_t winWidth, uint16_t winHeight)

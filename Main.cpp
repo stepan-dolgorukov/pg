@@ -22,12 +22,19 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	UNREFERENCED_PARAMETER(nCmdShow);
 
 	LPCWSTR szMainWindowClassName = TEXT("Password Generator");
-	LPCWSTR szMainWindowCaption = TEXT("Password Generator [by Dolgorukov]");
+	LPCWSTR szMainWindowCaption = TEXT("Password Generator [by DolgorukovGTA]");
 
-	if (FindWindow(szMainWindowClassName, szMainWindowCaption)) {
-		MessageBoxW(NULL, TEXT("Password Generator был запущен ранее."),
-			TEXT("Нам хватит и одной запущенной программы..."), MB_ICONERROR);
-		return EXIT_FAILURE;
+	// Проверка ниже позволит избежать запуска нескольких экземпляров приложения:
+	HANDLE hInstanceMutex = CreateMutex(NULL, TRUE, szMainWindowCaption);
+	if (!hInstanceMutex || GetLastError() == ERROR_ALREADY_EXISTS) {
+
+		HWND hExistingWindow = FindWindow(szMainWindowClassName, szMainWindowCaption);
+		if (hExistingWindow) {
+			SetForegroundWindow(hExistingWindow);
+		}
+
+		CloseHandle(hInstanceMutex);
+		return EXIT_SUCCESS;
 	}
 
 	if (FAILED(registerWindowClass(szMainWindowClassName, mainWindowProcedure, hAppInstance))) {
@@ -39,7 +46,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 	std::pair<uint16_t, uint16_t> posPair = getWindowCenterCoordinates(mainWindowWidth, mainWindowHeight);
 
-	HWND hMainWindow = CreateWindowEx(WS_EX_LAYERED,
+	HWND hMainWindow = CreateWindowEx(WS_EX_LAYERED | WS_EX_CONTROLPARENT,
 		szMainWindowClassName, szMainWindowCaption, WS_POPUP, posPair.first, posPair.second,
 		mainWindowWidth, mainWindowHeight, NULL, NULL, hAppInstance, NULL);
 
@@ -156,7 +163,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 
 		uint8_t height = 100;
 		for (uint8_t i = 3; i <= 7; i++) {
-			CreateWindow(TEXT("Button"), NULL,
+			CreateWindow(TEXT("Button"), TEXT("TEST"),
 				WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
 				10, height, 15, 25, window, reinterpret_cast<HMENU>(i), NULL, NULL);
 			CheckDlgButton(window, i, BST_CHECKED);
@@ -216,7 +223,6 @@ LRESULT CALLBACK mainWindowProcedure(HWND window, UINT message, WPARAM wParam, L
 			smoothWindowHide(window, false);
 
 			SendMessage(window, WM_SYSCOMMAND, SC_MINIMIZE, lParam);
-			Sleep(300);
 			return 0;
 		}
 
