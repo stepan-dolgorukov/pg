@@ -1,26 +1,12 @@
 ﻿#include "Main.h"
-
-#include <string>
 #include <random> // (std::random_device, std::mt19937)
 
-bool setCheckBoxTrueOrFalse(HWND window, uint8_t nCheckBox)
+char** generatePasswords(int32_t uPasswordsAmount, int32_t uPasswordsLength, bool* cbValues)
 {
-	if (IsDlgButtonChecked(window, nCheckBox) != BST_CHECKED) {
-		CheckDlgButton(window, nCheckBox, BST_UNCHECKED);
-		return false;
-	}
-
-	return true;
-}
-
-std::pair<char**, uint16_t> generatePasswords(uint16_t numberOfPasswords, uint16_t passwordsLength, bool* cbValues)
-{
-	uint32_t startTime = GetTickCount();
-
 	std::random_device rd;
 	std::mt19937 mersenne(rd()); // инициализируем Вихрь Мерсенна случайным стартовым числом
 
-	// Создаём ссылки на значения для абстракции:
+	// Создаём ссылки на значения для абстрактности:
 	bool
 		&useNumbers = cbValues[0],
 		&useCapLetters = cbValues[1],
@@ -34,137 +20,98 @@ std::pair<char**, uint16_t> generatePasswords(uint16_t numberOfPasswords, uint16
 		lowLetters[27] = "abcdefghijklmnopqrstuvwxyz",
 		symbols[9] = "%*)?@#$~";
 
-	char alphabet[71];
+	// 11 + 27 + 27 + 9 = 74
+	// 74 - 3 (нули-терминаторы) = 71
+	char alphabet[71]{};
 
 	bool noFirstAdd = false;
 
 	// Алфафит чисел будет хоть как подгружаться первым,
 	// проверка на непервое добавление (noFirstAdd) не нужна
-	
-	if (useNumbers) {
+
+	if (useNumbers)
+	{
 		strcpy(alphabet, numbers);
 		noFirstAdd = true;
 	}
-
-	if (useCapLetters) {
-		if (noFirstAdd) {
+	
+	if (useCapLetters) 
+	{
+		if (noFirstAdd) 
+		{
 			strcat(alphabet, capLetters);
 		}
-		else {
+
+		else 
+		{
 			strcpy(alphabet, capLetters);
 			noFirstAdd = true;
 		}
 	}
 
 	if (useLowLetters) {
-		if (noFirstAdd) {
+		if (noFirstAdd) 
+		{
 			strcat(alphabet, lowLetters);
 		}
-		else {
+		else 
+		{
 			strcpy(alphabet, lowLetters);
 			noFirstAdd = true;
 		}
 	}
 
-	if (useExtraSymbols) {
-		if (noFirstAdd) {
+	if (useExtraSymbols) 
+	{
+		if (noFirstAdd) 
+		{
 			strcat(alphabet, symbols);
 		}
-		else {
+		else 
+		{
 			strcpy(alphabet, symbols);
 		}
 	}
 
-	uint8_t nullTerminatorPosition = 0;
+	uint8_t uNullTerminatorPos = 0;
 
-	while (alphabet[nullTerminatorPosition] != '\0') {
-		++nullTerminatorPosition;
+	while (alphabet[uNullTerminatorPos] != '\0') {
+		++uNullTerminatorPos;
 	}
 
-	char** buf = new char*[numberOfPasswords];
+	char** buf = new char*[uPasswordsAmount];
 
 	// Переменные для хранения текущего (сгенерированного) символа ...
 	// ... и символа, сгенерированного на предыдущем шаге
-	char 
+	char
 		currentChar = 0, 
 		previousChar = 0;
 
-	for (uint16_t i = 0; i < numberOfPasswords; i++) {
-		buf[i] = new char[passwordsLength + 1]; // выделение памяти под один пароль
+	for (uint16_t i = 0; i < uPasswordsAmount; i++) 
+	{
+		buf[i] = new char[uPasswordsLength + 1]; // выделение памяти под один пароль
 
 		// Заполняем пароль допустимыми символами:
-		for (uint16_t k = 0; k < passwordsLength; k++) {
-			
-			/* % - деление с остатком,
-			rand() возвращает значение между 0 и RAND_MAX (32767) */
+		for (uint16_t k = 0; k < uPasswordsLength; k++)
+		{
+			// % - деление с остатком
+			currentChar = alphabet[mersenne() % uNullTerminatorPos];
 
-			currentChar = alphabet[mersenne() % nullTerminatorPosition];
-
-			if (avoidRepeat && tolower(previousChar) == tolower(currentChar)) { // если символы совпали, то ...
+			if (avoidRepeat && tolower(previousChar) == tolower(currentChar)) 
+			{ // если символы совпали, то ...
 				--k; // ... возвращаемся на шаг назад. На следующем шаге символ будет перезаписан в массив
 			}
-			else {
+
+			else 
+			{
 				buf[i][k] = currentChar;
 				previousChar = currentChar;
 			}
 		}
 
 		// Добавляем нуль-терминатор в конец каждого пароля:
-		buf[i][passwordsLength] = '\0';
+		buf[i][uPasswordsLength] = '\0';
 	}
 
-	return std::make_pair(buf, static_cast<uint16_t>(GetTickCount() - startTime));
-}
-
-wchar_t* getOutputFileName(uint16_t passwordsAmount, uint16_t passwordLength)
-{
-	SYSTEMTIME systemTime;
-	GetLocalTime(&systemTime);
-
-	// Записываем данные из структуры в название файла:
-	wchar_t fileName[50];
-	wsprintf(fileName, L"(P = %u, L = %u) %u.%u.%u %u-%u-%u-%u.txt",
-		passwordsAmount, passwordLength,
-		systemTime.wMonth, systemTime.wDay, systemTime.wYear,
-		systemTime.wHour, systemTime.wMinute, systemTime.wSecond, systemTime.wMilliseconds);
-
-	wchar_t* outputFilePath = new wchar_t[MAX_PATH]; // #define MAX_PATH 260
-	GetCurrentDirectory(MAX_PATH, outputFilePath);
-
-	wcscat(outputFilePath, L"\\");
-	wcscat(outputFilePath, fileName);
-	return outputFilePath; 
-}
-
-uint16_t writePasswordsArrayToFile(char** arr, uint16_t passwordLength, uint16_t passwordsAmount, wchar_t* fileFullPath) {
-
-	uint32_t startTime = GetTickCount();
-
-	HANDLE outputFile = CreateFile(fileFullPath, FILE_WRITE_DATA, FILE_SHARE_READ,
-		NULL, OPEN_ALWAYS, 0, NULL);
-
-	uint16_t bufSize = passwordLength + 8;
-
-	for (uint16_t i = 0; i < passwordsAmount; i++) {
-		char* buf = new char[bufSize];
-
-		sprintf(buf, "%d: %s", i + 1, arr[i]);
-		
-		if (i != (passwordsAmount - 1)) {
-			strcat(buf, "\n");
-		}
-
-		uint16_t bytesToWrite = 0;
-		while (buf[bytesToWrite] != '\0') {
-			++bytesToWrite;
-		}
-
-		WriteFile(outputFile, buf, bytesToWrite, 0, NULL);
-		delete[] buf;
-	}
-
-	// Закрытие файла:
-	CloseHandle(outputFile);
-
-	return static_cast<uint16_t>(GetTickCount() - startTime);
+	return buf;
 }

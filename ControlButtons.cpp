@@ -8,19 +8,19 @@ LRESULT CALLBACK controlButtonProcedure(HWND hWindow, UINT uMsg, WPARAM wParam, 
 
 	switch (uMsg)
 	{
+		case WM_MOUSEHOVER:
+			SendMessage(hWindow, WM_SETCURSOR, NULL, NULL);
+			break;
 
-	case WM_MOUSEHOVER: {
-		SendMessage(hWindow, WM_SETCURSOR, NULL, NULL);
-		break;
-	}
+		case WM_SETCURSOR:
+		{
+			static HCURSOR hCursor = LoadCursor(NULL, IDC_HAND);
+			SetCursor(hCursor);
+			break;
+		}
 
-	case WM_SETCURSOR: {
-		SetCursor(LoadCursor(NULL, IDC_HAND));
-		break;
-	}
-
-	default:
-		return DefSubclassProc(hWindow, uMsg, wParam, lParam);
+		default:
+			return DefSubclassProc(hWindow, uMsg, wParam, lParam);
 	}
 
 	return 0;

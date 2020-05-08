@@ -16,8 +16,11 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include <thread>
 #include "resource.h" // ресурсы проекта
 
-// ID кнопок:
-#define CLOSE_BUTTON 1
-#define MINIMIZE_BUTTON 2
-#define GENERATE_BUTTON 8
-#define INFO_BUTTON 9
+// ID обрабатываемых контров:
+enum ControlsID
+{
+	CLOSE_BUTTON = 1,
+	MINIMIZE_BUTTON = 2,
+	GENERATE_BUTTON = 8,
+	INFO_BUTTON = 9
+};
