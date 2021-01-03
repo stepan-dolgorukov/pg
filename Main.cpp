@@ -8,104 +8,146 @@
 #include "ControlButtons.h"
 #include "GenerationButton.h"
 
+#include <string>
+#include <cstring>
+#include <cstdlib>
 
-LRESULT CALLBACK mainWindowProcedure(HWND window, UINT msg, WPARAM wParam, LPARAM lParam);
-void handleError(DWORD uIdEror);
+::LRESULT __stdcall main_wnd_proc(
+	::HWND window,
+	::UINT msg,
+	::WPARAM w_param,
+	::LPARAM l_param);
 
+void handle_error(const ::DWORD id);
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+int __stdcall wWinMain(
+	::HINSTANCE inst,
+	::HINSTANCE prev_inst,
+	::LPWSTR cmd_line,
+	int cmd_show)
 {
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
-	UNREFERENCED_PARAMETER(nCmdShow);
+	const std::wstring
+		main_wnd_class_name{ L"pg" },
+		main_wnd_caption{ L"pg by DolgorukovGTA" };
 
-	LPCWSTR szMainWindowClassName = L"Password Generator";
-	LPCWSTR szMainWindowCaption = L"Password Generator [by DolgorukovGTA]";
+	// текущий дескриптор приложения
+	inst = ::GetModuleHandleW(nullptr);
 
-	// Текущий дескриптор приложения:
-	hInstance = GetModuleHandle(NULL);
+	::HANDLE inst_mutex{ ::CreateMutexW(
+		nullptr,
+		TRUE,
+		main_wnd_caption.c_str()) };
 
-	// Проверка ниже позволит избежать запуска нескольких экземпляров приложения:
-	HANDLE hInstanceMutex = CreateMutex(NULL, TRUE, szMainWindowCaption);
-	if (!hInstanceMutex|| GetLastError() == ERROR_ALREADY_EXISTS)
+	// проверка ниже позволит избежать запуска 
+	// нескольких экземпляров приложения
+	if (nullptr == inst_mutex ||
+		ERROR_ALREADY_EXISTS == ::GetLastError())
 	{
-		HWND hExistingWindow = FindWindow(szMainWindowClassName, szMainWindowCaption);
-		if (hExistingWindow) 
+		const ::HWND wnd{ FindWindowW(
+			main_wnd_class_name.c_str(),
+			main_wnd_caption.c_str()) };
+
+		if (nullptr != wnd) 
 		{
-			SetForegroundWindow(hExistingWindow);
+			::SetForegroundWindow(wnd);
 		}
 
-		CloseHandle(hInstanceMutex);
+		::CloseHandle(inst_mutex);
 		return EXIT_SUCCESS;
 	}
 
-	if (!registerWindowClass(szMainWindowClassName, mainWindowProcedure, hInstance))
+	const ATOM reg_res{ ::registerWindowClass(
+		main_wnd_class_name.c_str(),
+		main_wnd_proc,
+		inst) };
+
+	if (!reg_res)
 	{
-		handleError(GetLastError());
+		::handle_error(::GetLastError());
 	}
 
-	// Размеры окна:
-	const int32_t
-		mainWindowWidth = 250, // ширина
-		mainWindowHeight = 315; // высота
+	// размеры окна
+	const std::uint16_t
+		main_wnd_w{ 250u }, // ширина
+		main_wnd_h{ 315u }; // высота
 
-	std::pair<int32_t, int32_t> posPair = getWindowCenterCoordinates(mainWindowWidth, mainWindowHeight);
+	const auto pos_pair{ ::getWindowCenterCoordinates(
+		main_wnd_w,
+		main_wnd_h) };
 
-	HWND hMainWindow = CreateWindowEx(WS_EX_LAYERED, szMainWindowClassName,
-		szMainWindowCaption, WS_POPUP, posPair.first, posPair.second,
-		mainWindowWidth, mainWindowHeight, NULL, NULL, hInstance, NULL);
+	const HWND main_wnd{ ::CreateWindowExW(
+		WS_EX_LAYERED,
+		main_wnd_class_name.c_str(),
+		main_wnd_caption.c_str(),
+		WS_POPUP,
+		pos_pair.first,
+		pos_pair.second,
+		main_wnd_w,
+		main_wnd_h,
+		nullptr,
+		nullptr,
+		inst,
+		nullptr) };
 
-	// Анимация появления окна в сообщении WM_SIZE
-	// На текущий момент окно не видно
 
-	if (!hMainWindow)
+	if (nullptr == main_wnd)
 	{
-		handleError(GetLastError());
+		::handle_error(::GetLastError());
 	}
 
-	ShowWindow(hMainWindow, SW_SHOWNORMAL);
-	UpdateWindow(hMainWindow);
+	// анимация появления окна в сообщении WM_SIZE
+	// на текущий момент окно не видно
+	::ShowWindow(main_wnd, SW_SHOWNORMAL);
+	::UpdateWindow(main_wnd);
 
 	MSG msg{};
 
-	while (GetMessage(&msg, NULL, 0, 0))
+	while (::GetMessageW(&msg, nullptr, 0u, 0u))
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		::TranslateMessage(&msg);
+		::DispatchMessageW(&msg);
 	}
 
 	return static_cast<int>(msg.wParam);
 }
 
-LRESULT CALLBACK mainWindowProcedure(HWND hWindow, UINT uMsg, WPARAM wParam, LPARAM lParam)
+::LRESULT __stdcall ::main_wnd_proc(
+	::HWND wnd,
+	::UINT msg,
+	::WPARAM w_param,
+	::LPARAM l_param)
 {
-	static bool checkBoxStatuses[5] = { true, true, true, true, true };
+	static bool check_box_vals[5u] = { true, true, true, true, true };
+	static ::HWND 
+		pass_amnt_form{},
+		pass_len_form{};
 
-	static HWND hEditPasswordsAmount, hEditPasswordsLength;
+	// объявляем переменные под шрифты, которые будут задействованы в сообщении WM_PAINT
+	// шрифты инициализируются в сообщении WM_CREATE
+	static ::HFONT
+		caption_font{},
+		text_font{};
 
-	// Объявляем переменные под шрифты, которые будут задействованы в сообщение WM_PAINT
-	// Шрифты инициализируются в сообщении WM_CREATE
-	static HFONT hCaptionFont, hTextFont;
-
-	// Название класса и заголовок окна "О программе". Вынесено в эту область ...
+	// !!!
+	// название класса и заголовок окна "О программе". Вынесено в эту область ...
 	// ... чтобы не приходилось корректировать проверку на существование (FindWindow) ...
-	// окна при изменении названия класса или заголовка.
-	static LPCWSTR
-		aboutWindowClassName = L"About Program Window",
-		aboutWindowCaption = L"О программе Password Generator [by DolgorukovGTA]";
+	// окна при дальнейшем изменении названия класса или заголовка.
+	static ::LPCWSTR
+		info_wnd_class_name{ L"About pg" },
+		info_wnd_caption{ L"About pg" };
 
-	static HINSTANCE hCurrentInstance = GetModuleHandle(NULL);
+	static const ::HINSTANCE
+		inst{ GetModuleHandleW(nullptr) };
 
-	switch (uMsg)
+	switch (msg)
 	{
-		// Плавная анимация во время разворачивания и появления в первый раз окна:
+		// плавная анимация появления
 		case WM_SIZE:
 		{
-			if (wParam == SIZE_RESTORED)
+			if (SIZE_RESTORED == w_param)
 			{
-				std::thread thr([hWindow]
-				{
-					smoothWindowApprearance(hWindow);
+				std::thread thr([wnd] {
+					::smoothWindowApprearance(wnd);
 				});
 
 				thr.detach();
@@ -118,181 +160,326 @@ LRESULT CALLBACK mainWindowProcedure(HWND hWindow, UINT uMsg, WPARAM wParam, LPA
 		// ... перетаскивает окно
 		case WM_MOVING:
 		{
-			static HCURSOR hCursor = LoadCursor(NULL, IDC_SIZEALL);
-			SetCursor(hCursor);
+			static const ::HCURSOR cursor{
+				::LoadCursorW(nullptr, IDC_SIZEALL) };
+			
+			::SetCursor(cursor);
 			break;
 		}
 
 		case WM_CREATE:
 		{
-			hCaptionFont = CreateFont(22, 0, 0, 0, FW_NORMAL, FW_DONTCARE, 0, 0,
-				DEFAULT_CHARSET, OUT_TT_ONLY_PRECIS, CLIP_CHARACTER_PRECIS,
-				PROOF_QUALITY, FF_MODERN, L"Segoe UI");
+			caption_font = ::CreateFontW(
+				22,
+				0,
+				0,
+				0,
+				FW_NORMAL,
+				FW_DONTCARE,
+				0,
+				0,
+				DEFAULT_CHARSET,
+				OUT_TT_ONLY_PRECIS,
+				CLIP_CHARACTER_PRECIS,
+				PROOF_QUALITY,
+				FF_MODERN,
+				L"Segoe UI");
 
-			hTextFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FW_DONTCARE, 0, 0,
-				DEFAULT_CHARSET, OUT_TT_ONLY_PRECIS, CLIP_CHARACTER_PRECIS,
-				PROOF_QUALITY, FF_MODERN, L"Segoe UI");
+			text_font = ::CreateFontW(
+				18,
+				0,
+				0,
+				0,
+				FW_NORMAL,
+				FW_DONTCARE,
+				0,
+				0,
+				DEFAULT_CHARSET,
+				OUT_TT_ONLY_PRECIS,
+				CLIP_CHARACTER_PRECIS,
+				PROOF_QUALITY,
+				FF_MODERN,
+				L"Segoe UI");
 
-			// Кнопка "Закрыть" (красного цвета):
-			HWND hCloseButton = CreateWindow(L"Button", NULL,
+			// кнопка "Закрыть" (красного цвета):
+			const ::HWND close_btn{ ::CreateWindowExW(
+				0u,
+				L"Button",
+				NULL,
 				WS_CHILD | WS_VISIBLE | BS_BITMAP,
-				220, 5, 25, 25, hWindow,
-				reinterpret_cast<HMENU>(CLOSE_BUTTON), hCurrentInstance, NULL);
+				220,
+				5,
+				25,
+				25,
+				wnd,
+				reinterpret_cast<::HMENU>(::ControlsID::CLOSE_BUTTON),
+				inst,
+				nullptr) };
 
-			// Подгружаем иконку для кнопки из ресурсов:
-			HBITMAP hCloseButtonBitmap = LoadBitmap(hCurrentInstance,
-				MAKEINTRESOURCE(IDB_CLOSE_BUTTON));
+			// подгружаем иконку кнопки из ресурсов:
+			const ::HBITMAP close_btn_bmp{ ::LoadBitmapW(
+				inst,
+				MAKEINTRESOURCEW(IDB_CLOSE_BUTTON)) };
 
-			// Устанавливаем иконку кнопке:
-			SendMessage(hCloseButton, BM_SETIMAGE, IMAGE_BITMAP,
-				reinterpret_cast<LPARAM>(hCloseButtonBitmap));
+			// устанавливаем иконку кнопке:
+			::SendMessageW(
+				close_btn,
+				BM_SETIMAGE,
+				IMAGE_BITMAP,
+				reinterpret_cast<::LPARAM>(close_btn_bmp));
 
 			// Выгружаем битмап из памяти:
-			DeleteObject(hCloseButtonBitmap);
+			::DeleteObject(close_btn_bmp);
 
-			// "Кнопочная" процедура (рукопис.) для отработки необходимых сообщений:
-			SetWindowSubclass(hCloseButton, controlButtonProcedure, 0, 0);
+			// "Кнопочная" процедура для отработки необходимых сообщений:
+			::SetWindowSubclass(
+				close_btn,
+				controlButtonProcedure,
+				0u,
+				0u);
 
 			// Кнопка "Свернуть" (жёлтого цвета):
-			HWND hMinimizeButton = CreateWindow(L"Button", NULL,
+			const ::HWND minimize_btn{ ::CreateWindowExW(
+				0u,
+				L"Button",
+				nullptr,
 				WS_CHILD | WS_VISIBLE | BS_BITMAP,
-				190, 5, 25, 25, hWindow,
-				reinterpret_cast<HMENU>(MINIMIZE_BUTTON), hCurrentInstance, NULL);
+				190,
+				5,
+				25,
+				25, 
+				wnd,
+				reinterpret_cast<::HMENU>(::ControlsID::MINIMIZE_BUTTON),
+				inst,
+				nullptr) };
 
 			// Подгружаем битмап для кнопки из ресурсов:
-			HBITMAP hMinimizeButtonBitmap = LoadBitmap(hCurrentInstance,
-				MAKEINTRESOURCE(IDB_MINIMIZE_BUTTON));
+			const ::HBITMAP minimize_btn_bmp{ LoadBitmapW(
+				inst,
+				MAKEINTRESOURCEW(IDB_MINIMIZE_BUTTON)) };
 
 			// Устанавливаем загруженный битмап кнопке:
-			SendMessage(hMinimizeButton, BM_SETIMAGE, IMAGE_BITMAP,
-				reinterpret_cast<LPARAM>(hMinimizeButtonBitmap));
+			::SendMessageW(
+				minimize_btn,
+				BM_SETIMAGE,
+				IMAGE_BITMAP,
+				reinterpret_cast<::LPARAM>(minimize_btn_bmp));
 
 			// Выгружаем битмап из памяти:
-			DeleteObject(hMinimizeButtonBitmap);
+			::DeleteObject(minimize_btn_bmp);
 
 			// Аналогично с кнопкой "Свернуть":
-			SetWindowSubclass(hMinimizeButton, controlButtonProcedure, 0, 0);
+			::SetWindowSubclass(
+				minimize_btn,
+				controlButtonProcedure,
+				0u,
+				0u);
 
 			// Поле ввода "Количество паролей":
-			hEditPasswordsAmount = CreateWindow(L"Edit", L"64",
+			pass_amnt_form = ::CreateWindowExW(
+				0u,
+				L"Edit",
+				L"64",
 				WS_CHILD | WS_VISIBLE | ES_NUMBER,
-				195, 49, 40, 20, hWindow, NULL, hCurrentInstance, NULL);
+				195,
+				49,
+				40,
+				20,
+				wnd,
+				nullptr,
+				inst,
+				nullptr);
 
-			SendMessage(hEditPasswordsAmount, WM_SETFONT, reinterpret_cast<WPARAM>(hTextFont), NULL);
+			::SendMessageW(
+				pass_amnt_form,
+				WM_SETFONT,
+				reinterpret_cast<::WPARAM>(text_font),
+				0);
 
 			// Поле ввода "Длина каждого пароля":
-			hEditPasswordsLength = CreateWindow(L"Edit", L"32",
+			pass_len_form = ::CreateWindowExW(
+				0u,
+				L"Edit",
+				L"32",
 				WS_CHILD | WS_VISIBLE | ES_NUMBER,
-				195, 72, 40, 20, hWindow, NULL, hCurrentInstance, NULL);
+				195,
+				72,
+				40,
+				20,
+				wnd,
+				nullptr,
+				inst,
+				nullptr);
 
-			SendMessage(hEditPasswordsLength, WM_SETFONT, reinterpret_cast<WPARAM>(hTextFont), NULL);
+			::SendMessageW(
+				pass_len_form,
+				WM_SETFONT,
+				reinterpret_cast<::WPARAM>(text_font),
+				0);
 
 			// Создание чекбоксов:
-			uint16_t uHeight = 100;
-			for (uint8_t i = 3; i <= 7; i++)
+			auto h_offset{ 100u };
+			for (auto i{ 3u }; i <= 7u; i++)
 			{
-				CreateWindow(L"Button", NULL,
+				::CreateWindowExW(
+					0u,
+					L"Button",
+					nullptr,
 					WS_CHILD | WS_VISIBLE | BS_CHECKBOX,
-					10, uHeight, 15, 25, hWindow,
-					reinterpret_cast<HMENU>(i), hCurrentInstance, NULL);
+					10,
+					h_offset,
+					15,
+					25, wnd,
+					reinterpret_cast<::HMENU>(i),
+					inst,
+					nullptr);
 
-				CheckDlgButton(hWindow, i, BST_CHECKED);
-				uHeight += 22;
+				CheckDlgButton(wnd, i, BST_CHECKED);
+				h_offset += 22u;
 			}
 
 			// Кнопка "Сгенерировать пароли":
-			HWND hGenerationButton = CreateWindow(L"Button", NULL,
+			const ::HWND generation_btn{ CreateWindowExW(
+				0u,
+				L"Button",
+				nullptr,
 				WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
-				10, 220, 230, 40, hWindow,
-				reinterpret_cast<HMENU>(GENERATE_BUTTON), hCurrentInstance, NULL);
+				10,
+				220,
+				230,
+				40,
+				wnd,
+				reinterpret_cast<::HMENU>(ControlsID::GENERATE_BUTTON),
+				inst,
+				nullptr) };
 
-			SetWindowSubclass(hGenerationButton, generationButtonProcedure, NULL, NULL);
+			::SetWindowSubclass(
+				generation_btn,
+				generationButtonProcedure,
+				0u,
+				0u);
 
 			// Кнопка "О программе":
-			HWND hInfoButton = CreateWindow(L"Button", NULL,
+			const ::HWND info_btn{ ::CreateWindowExW(
+				0u,
+				L"Button",
+				nullptr,
 				WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
-				10, 265, 230, 40, hWindow,
-				reinterpret_cast<HMENU>(INFO_BUTTON), hCurrentInstance, NULL);
+				10,
+				265,
+				230,
+				40,
+				wnd,
+				reinterpret_cast<::HMENU>(::ControlsID::INFO_BUTTON),
+				inst,
+				nullptr) };
 
-			SetWindowSubclass(hInfoButton, infoButtonProcedure, NULL, NULL);
+			::SetWindowSubclass(
+				info_btn,
+				infoButtonProcedure,
+				0u,
+				0u);
+
 			break;
 		}
 
 		case WM_COMMAND:
 		{
 			// Младшее слово определяет идентификатор пункта меню
-			switch (LOWORD(wParam))
+			switch (LOWORD(w_param))
 			{
-			case CLOSE_BUTTON:
+			case ::ControlsID::CLOSE_BUTTON:
 			{
-				HWND hAboutWindow = FindWindow(aboutWindowClassName, aboutWindowCaption);
+				const ::HWND info_wnd{ ::FindWindowW(
+					info_wnd_class_name,
+					info_wnd_caption) };
 
-				if (hAboutWindow)
+				if (nullptr != info_wnd)
 				{
-					std::thread thr(smoothWindowHide, hAboutWindow, true);
+					std::thread thr(
+						smoothWindowHide,
+						info_wnd,
+						true);
 					thr.detach();
 				}
 
-				smoothWindowHide(hWindow, true);
+				::smoothWindowHide(wnd, true);
 
 				// Выгружаем шрифты:
-				DeleteObject(hCaptionFont);
-				DeleteObject(hTextFont);
-				ExitProcess(EXIT_SUCCESS);
+				::DeleteObject(caption_font);
+				::DeleteObject(text_font);
+				
+				::ExitProcess(EXIT_SUCCESS);
 			}
 
-			case MINIMIZE_BUTTON:
+			case ::ControlsID::MINIMIZE_BUTTON:
 			{
-				HWND hAboutWindow = FindWindow(aboutWindowClassName, aboutWindowCaption);
+				const ::HWND info_wnd{ ::FindWindowW(
+					info_wnd_class_name,
+					info_wnd_caption) };
 
-				if (hAboutWindow)
+				if (nullptr != info_wnd)
 				{
-					std::thread thr(smoothWindowHide, hAboutWindow, true);
+					std::thread thr(smoothWindowHide, info_wnd, true);
 					thr.detach();
 				}
 
-				smoothWindowHide(hWindow, false);
-				ShowWindow(hWindow, SW_MINIMIZE);
+				::smoothWindowHide(wnd, false);
+				::ShowWindow(wnd, SW_MINIMIZE);
 				break;
 			}
 
-			case GENERATE_BUTTON:
+			case ::ControlsID::GENERATE_BUTTON:
 			{
-
 				// Проверим значения чекбоксов кроме ЧБ "Избегать повторений"
-				uint8_t uTrueValuesAmount = 0;
-				for (uint8_t i = 0; i < 4; i++)
+				auto true_values_amnt{ 0u };
+
+				for (auto i{ 0u }; i < 4u; i++)
 				{
-					if (checkBoxStatuses[i])
+					if (check_box_vals[i])
 					{
-						++uTrueValuesAmount;
+						++true_values_amnt;
 					}
 				}
 
-				// Используемые кавычки: « »
-				if (uTrueValuesAmount == 0)
+				if (0u == true_values_amnt)
 				{
-					MessageBox(hWindow,
-						L"Галочка должна стоять как минимум у одного из чекбоксов. Чекбокс «Избегать повторений» не считается.",
+					::MessageBoxW(
+						wnd,
+						L"Галочка должна стоять как минимум у одного из чекбоксов. \
+						Чекбокс \"Избегать повторений\" не считается.",
 						L"Ошибка:", MB_ICONERROR);
 					break;
 				}
 
 				// Считываем информацию с полей "Количество паролей" и ...
 				// ... "Длина каждого пароля":
+
 				char
-					passAmountBuf[5]{},
-					passLenBuf[5]{};
+					input_pass_amnt[16u]{ 0 },
+					input_pass_len[16u]{ 0 };
 
-				GetWindowTextA(hEditPasswordsAmount, passAmountBuf, 4);
-				GetWindowTextA(hEditPasswordsLength, passLenBuf, 4);
+				::GetWindowTextA(
+					pass_amnt_form,
+					input_pass_amnt,
+					sizeof(input_pass_amnt) / sizeof(char) - 1);
 
-				int32_t passAmount = atoi(passAmountBuf);
-				int32_t passLen = atoi(passLenBuf);
+				::GetWindowTextA(
+					pass_len_form,
+					input_pass_len,
+					sizeof(input_pass_len) / sizeof(char) - 1);
 
-				if (passAmount == 0 && passLen == 0)
+				auto
+					pass_amnt{ 0u },
+					pass_len{ 0u };
+
+				pass_amnt = std::atoi(input_pass_amnt);
+				pass_len = std::atoi(input_pass_len);
+
+				if (0u == pass_amnt &&
+					0u == pass_len)
 				{
-					MessageBox(hWindow,
+					MessageBox(wnd,
 						L"Поля «Кол-во паролей» и «Длина каждого пароля». \
 						 Введённые значения не соответствуют ограничениям.\n\
 						 Минимальное кол-во паролей: 5, максимальное: 4096.\n\
@@ -303,196 +490,267 @@ LRESULT CALLBACK mainWindowProcedure(HWND hWindow, UINT uMsg, WPARAM wParam, LPA
 
 				else
 				{
-					if (passAmount == 0 || passAmount < 5 || passAmount > 4096)
+					if (0u == pass_amnt ||
+						4096u < pass_amnt)
 					{
-						MessageBox(hWindow,
+						::MessageBoxW(
+							wnd,
 							L"Введеное значение не соответствует ограничениям.\n\
-							 Минимальное кол-во паролей: 5, максимальное: 4096.",
-							L"Ошибка ввода:", MB_ICONERROR);
+							 Минимальное кол-во паролей: 1, максимальное: 4096.",
+							L"Ошибка ввода:",
+							MB_ICONERROR);
+
 						break;
 					}
 
-					if (passLen == 0 || passLen < 4 || passLen > 256)
+					if (0u == pass_len ||
+						4u > pass_len ||
+						256 < pass_len)
 					{
-						MessageBox(hWindow,
+						::MessageBoxW(
+							wnd,
 							L"Введеное значение не соответствует ограничениям\n\
 							 Минимальная длина пароля: 4, максимальная: 256.",
-							L"Ошибка ввода:", MB_ICONERROR);
+							L"Ошибка ввода:",
+							MB_ICONERROR);
+
 						break;
 					}
 				}
 
-				SYSTEMTIME st{};
-				GetLocalTime(&st);
+				::SYSTEMTIME st{};
+				::OPENFILENAME ofn{};
 				wchar_t fileName[MAX_PATH]{};
-				wsprintf(fileName, L"(P = %u, L = %u) %u.%u.%u %u-%u-%u-%u.txt",
-					passAmount, passLen, st.wMonth, st.wDay, st.wYear, st.wHour,
-					st.wMinute, st.wSecond, st.wMilliseconds);
 
-				OPENFILENAME ofn{};
+				::GetLocalTime(&st);
+				::wsprintfW(
+					fileName,
+					L"(P = %u, L = %u) %u.%u.%u %u-%u-%u-%u.txt",
+					pass_amnt,
+					pass_len,
+					st.wMonth,
+					st.wDay,
+					st.wYear,
+					st.wHour,
+					st.wMinute,
+					st.wSecond,
+					st.wMilliseconds);
+
 				ofn.lStructSize = sizeof(OPENFILENAME);
-				ofn.hwndOwner = hWindow;
-				ofn.hInstance = NULL;
+				ofn.hwndOwner = wnd;
+				ofn.hInstance = nullptr;
 				// Строка ниже действительно должна заканчиваться 2-умя нуль-терминаторами:
 				ofn.lpstrFilter = L"Текстовый файл (*.txt)\0.txt\0";
-				ofn.lpstrCustomFilter = NULL;
+				ofn.lpstrCustomFilter = nullptr;
 				ofn.nMaxCustFilter = 256;
 				ofn.nFilterIndex = 0;
 				ofn.lpstrFile = fileName;
 				ofn.nMaxFile = MAX_PATH;
-				ofn.lpstrFileTitle = NULL;
+				ofn.lpstrFileTitle = nullptr;
 				ofn.nMaxFileTitle = 0;
-				ofn.lpstrInitialDir = NULL;
-				ofn.lpstrTitle = NULL;
-				ofn.Flags = NULL;
-				ofn.nFileOffset = 0;
-				ofn.nFileExtension = 0;
-				ofn.lpstrDefExt = NULL;
-				ofn.lCustData = NULL;
-				ofn.lpfnHook = NULL;
-				ofn.lpTemplateName = NULL;
+				ofn.lpstrInitialDir = nullptr;
+				ofn.lpstrTitle = nullptr;
+				ofn.Flags = 0u;
+				ofn.nFileOffset = 0u;
+				ofn.nFileExtension = 0u;
+				ofn.lpstrDefExt = nullptr;
+				ofn.lCustData = 0;
+				ofn.lpfnHook = nullptr;
+				ofn.lpTemplateName = nullptr;
 
-				if (!GetSaveFileName(&ofn))
+				if (0u == ::GetSaveFileNameW(&ofn))
 				{
+					// !!!
 					break;
 				}
 
-				uint32_t uStartTime = GetTickCount();
+				auto start_time{ ::GetTickCount64() };
 
 				// Функция ниже возвращает динамический массив с сгенерированными паролями, время их генерации
 				// Указатель на указатель, т.к массив состоит из Си-строк
-				char** pPasswordsArray = generatePasswords(passAmount, passLen, checkBoxStatuses);
+				const auto passwords{ ::generatePasswords(
+					pass_amnt,
+					pass_len,
+					check_box_vals) };
 
-				uint32_t uGenerationTime = GetTickCount() - uStartTime; // засекаем время генерации
+				// засекаем время генерации
+				auto generation_time{ GetTickCount64() - start_time };
 
-				uStartTime = GetTickCount(); // обновляем счётчик
-				HANDLE hWriteFile = CreateFile(ofn.lpstrFile, FILE_WRITE_DATA, NULL,
-					NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				// обновляем счётчик, будем считать время записи
+				start_time = GetTickCount64();
 
-				if (hWriteFile == INVALID_HANDLE_VALUE)
+				const ::HANDLE output_file{ ::CreateFileW(
+					ofn.lpstrFile,
+					FILE_WRITE_DATA,
+					0u,
+					nullptr,
+					OPEN_ALWAYS,
+					FILE_ATTRIBUTE_NORMAL,
+					nullptr) };
+
+				if (INVALID_HANDLE_VALUE == output_file)
 				{
-					handleError(GetLastError());
+					::handle_error(::GetLastError());
 					break;
 				}
 
 				// кол-во паролей максимально может достигать четырёхзначного числа
+				char tmp_buf[5u]{};
+				auto write_buf_size{ 0u };
 
-				char tmpBuf[5]{};
-				size_t uWriteBufferSize = 0;
-
-				for (uint16_t i = 0; i < passAmount; i++)
+				for (uint16_t i = 0; i < pass_amnt; i++)
 				{
-					sprintf(tmpBuf, "%i", i + 1);
+					sprintf(tmp_buf, "%i", i + 1);
 
 					// y + 1 + 1 + x + 1 + 1
-					uWriteBufferSize = strlen(tmpBuf) + 1 + 1 + strlen(pPasswordsArray[i]) + 1;
+					write_buf_size = std::strlen(tmp_buf) + 
+									  1u +
+									  1u + 
+									  std::strlen(passwords[i]) + 1;
 
 					// В последней строке не нужно писать \n, поэтому строка становится на 1 символ меньше
-
-					if (i != passAmount - 1) // Учитываем сообщение выше
+					if (i != pass_amnt - 1) // Учитываем сообщение выше
 					{
-						++uWriteBufferSize;
+						++write_buf_size;
 					}
 
-					char* pWriteBuffer = new char[uWriteBufferSize];
+					char* write_buf{ new char[write_buf_size] };
 
-					sprintf(pWriteBuffer, (i != passAmount - 1) ? "%i: %s\n" : "%i: %s",
-						i + 1, pPasswordsArray[i]);
+					std::sprintf(write_buf,
+								(i != pass_amnt - 1) ? "%i: %s\n" : "%i: %s",
+								 i + 1, passwords[i]);
 
-					BOOL writeResult = WriteFile(hWriteFile, pWriteBuffer, uWriteBufferSize - 1, 0, NULL);
-					if (!writeResult)
+					::BOOL res{ ::WriteFile(
+						output_file,
+						write_buf,
+						write_buf_size - 1,
+						0u,
+						nullptr) };
+
+					if (0u == res)
 					{
-						wchar_t szMsg[256]{0};
-						wsprintf(szMsg,
+						wchar_t szMsg[256u]{0};
+
+						::wsprintfW(szMsg,
 							L"Не удалось записать строку №%i в файл.\n\
 							 Если Вы нажмёте «Повторить попытку» (Retry), то приложение попытается вновь записать в файл эту строку.\n\
 							 Если нажмёте «Отмена» (Cancel), то приложение остановит запись в файл.", i + 1);
 
-						int32_t msgBoxResult = MessageBox(hWindow, szMsg, L"Уведомление:", MB_RETRYCANCEL | MB_ICONERROR | MB_APPLMODAL);
-						if (msgBoxResult == IDRETRY)
+						const auto msg_box_res{::MessageBoxW(
+							wnd,
+							szMsg,
+							L"Уведомление:",
+							MB_RETRYCANCEL | MB_ICONERROR | MB_APPLMODAL) };
+						
+						if (IDRETRY == msg_box_res)
 						{
 							--i;
 						}
 
 						else
 						{
-							delete[] pWriteBuffer;
-							CloseHandle(hWriteFile);
+							delete[] write_buf;
+							CloseHandle(output_file);
 							return 0;
 						}
 
 					}
 
-					delete[] pWriteBuffer;
+					delete[] write_buf;
 				}
 
-				CloseHandle(hWriteFile);
+				CloseHandle(output_file);
 
-				uint32_t uWritingTime = GetTickCount() - uStartTime; // засекаем время записи в файл
+				// засекаем время записи в файл
+				const auto write_time{ GetTickCount64() - start_time };
 
 				// Массивы, в которые будут писаться время записи и генерации:
-				wchar_t geBuf[10]{};
-				wchar_t wrBuf[10]{};
+				wchar_t generation_time_buf[10]{};
+				wchar_t write_time_buf[10]{};
+				wchar_t notification[320]{};
 
-				(uGenerationTime != 0) ? wsprintf(geBuf, L"%u", uGenerationTime) : wsprintf(geBuf, L"< 1");
-				(uWritingTime != 0) ? wsprintf(wrBuf, L"%u", uWritingTime) : wsprintf(wrBuf, L"< 1");
+				(0u != generation_time) ? 
+					::wsprintfW(generation_time_buf, L"%u", generation_time) : 
+					::wsprintfW(generation_time_buf, L"%s\n", L"< 1");
 
-				wchar_t szNotificationMsg[320]{};
-				wsprintf(szNotificationMsg,
-					L"Пароли записаны в файл '%s'\nВремя генерации: %s мс\nВремя записи в файл: %s мс",
-					ofn.lpstrFile, geBuf, wrBuf);
+				(0u != write_time) ?
+					::wsprintfW(write_time_buf, L"%u", write_time) :
+					::wsprintfW(write_time_buf, L"%s\n", L"< 1");
 
-				MessageBox(hWindow, szNotificationMsg, L"Уведомление:", MB_OK);
+				::wsprintfW(notification,
+					L"Пароли записаны в файл \"%s\"\nВремя генерации: %s мс\nВремя записи в файл: %s мс",
+					ofn.lpstrFile,
+					generation_time_buf,
+					write_time_buf);
+
+				::MessageBoxW(wnd, notification, L"Уведомление:", MB_OK);
 
 				// Освобождение выделенной памяти под массив с паролями:
-				for (uint16_t i = 0; i < passAmount; i++)
-					delete[] pPasswordsArray[i];
-				delete[] pPasswordsArray;
+				for (auto i{0u}; i < pass_amnt; i++)
+					delete[] passwords[i];
+				delete[] passwords;
 
 				break;
 			}
 
-			case INFO_BUTTON:
+			case ::ControlsID::INFO_BUTTON:
 			{
-				HWND hAboutWindow = FindWindow(aboutWindowClassName, aboutWindowCaption);
-				if (hAboutWindow)
+				::HWND info_wnd{ ::FindWindowW(
+					info_wnd_class_name,
+					info_wnd_caption) };
+
+				if (nullptr != info_wnd)
 				{
-					SetForegroundWindow(hAboutWindow);
+					::SetForegroundWindow(info_wnd);
 					break;
 				}
 
 				// Процедура окна "О программе" находится в файле AboutWindow.cpp
-				static ATOM regResult = registerWindowClass(aboutWindowClassName, aboutWindowProcedure, hCurrentInstance);
-				if (regResult == 0)
+				static ::ATOM reg_res{ ::registerWindowClass(
+					info_wnd_class_name,
+					aboutWindowProcedure, inst) };
+
+				if (0u == reg_res)
 				{
-					handleError(GetLastError());
+					::handle_error(GetLastError());
 				}
 
-				static const int32_t
-					aboutWindowWeight = 250,
-					aboutWindowHeight = 250;
+				static const uint32_t
+				info_wnd_w{ 250u },
+				info_wnd_h{ info_wnd_w };
 
-				std::pair<int32_t, int32_t> posPair =
-					getWindowCenterCoordinates(aboutWindowWeight, aboutWindowHeight);
+				const
+				std::pair<uint32_t,
+					      uint32_t> pos_pair{
+					::getWindowCenterCoordinates(
+						info_wnd_w,
+						info_wnd_h) };
 
 				// Окно "О программе"
-				hAboutWindow = CreateWindowEx(WS_EX_LAYERED,
-					aboutWindowClassName, aboutWindowCaption,
-					WS_POPUP, posPair.first, posPair.second,
-					aboutWindowWeight, aboutWindowHeight, NULL,
-					NULL, hCurrentInstance, NULL);
+				info_wnd = CreateWindowExW(
+					WS_EX_LAYERED,
+					info_wnd_class_name,
+					info_wnd_caption,
+					WS_POPUP,
+					pos_pair.first,
+					pos_pair.second,
+					info_wnd_w,
+					info_wnd_h,
+					nullptr,
+					nullptr,
+					inst,
+					nullptr);
 
-				if (hAboutWindow == NULL)
+				if (nullptr != info_wnd)
 				{
-					handleError(GetLastError());
+					::handle_error(GetLastError());
 				}
 
-				UpdateWindow(hAboutWindow);
-				ShowWindow(hAboutWindow, SW_SHOWNORMAL);
+				::UpdateWindow(info_wnd);
+				::ShowWindow(info_wnd, SW_SHOWNORMAL);
 
-				std::thread thr([hAboutWindow]
-				{
-					smoothWindowApprearance(hAboutWindow);
+				std::thread thr([info_wnd] {
+					smoothWindowApprearance(info_wnd);
 				});
 
 				thr.detach();
@@ -501,27 +759,27 @@ LRESULT CALLBACK mainWindowProcedure(HWND hWindow, UINT uMsg, WPARAM wParam, LPA
 			}
 
 			// Обработка чекбоксов:
-			if (LOWORD(wParam) >= 3 && LOWORD(wParam) <= 7) // [3; 7] - чекбоксы
+			if (LOWORD(w_param) >= 3 && LOWORD(w_param) <= 7) // [3; 7] - чекбоксы
 			{
-				BOOL result = IsDlgButtonChecked(hWindow, LOWORD(wParam)); // получаем текущее состояние
-				CheckDlgButton(hWindow, LOWORD(wParam), result ? BST_UNCHECKED : BST_CHECKED); // меняем визуальное состояние
-				checkBoxStatuses[LOWORD(wParam) - 3] = result ? false : true; // присваиваем соответствующее значение массиву логических значений чекбоксов
+				BOOL result = IsDlgButtonChecked(wnd, LOWORD(w_param)); // получаем текущее состояние
+				CheckDlgButton(wnd, LOWORD(w_param), result ? BST_UNCHECKED : BST_CHECKED); // меняем визуальное состояние
+				check_box_vals[LOWORD(w_param) - 3] = result ? false : true; // присваиваем соответствующее значение массиву логических значений чекбоксов
 			}
 		}
 
 		case WM_PAINT:
 		{
 			PAINTSTRUCT ps{};
-			HDC hdc = BeginPaint(hWindow, &ps);
+			HDC hdc = BeginPaint(wnd, &ps);
 
-			SelectObject(hdc, hCaptionFont);
+			SelectObject(hdc, caption_font);
 			SetBkColor(hdc, RGB(29, 29, 29));
 			SetTextColor(hdc, RGB(255, 255, 255));
 
 			// Отображение текста:
 			TextOut(hdc, 10, 6, L"Генератор паролей", strlen("Генератор паролей"));
 
-			SelectObject(hdc, hTextFont);
+			SelectObject(hdc, text_font);
 
 			TextOut(hdc, 10, 52, L"Кол-во паролей:", lstrlen(L"Кол-во паролей:"));
 			TextOut(hdc, 10, 74, L"Длина каждого пароля:", lstrlen(L"Длина каждого пароля:"));
@@ -532,7 +790,7 @@ LRESULT CALLBACK mainWindowProcedure(HWND hWindow, UINT uMsg, WPARAM wParam, LPA
 			TextOut(hdc, 30, 169, L"Использовать символы", lstrlen(L"Использовать символы"));
 			TextOut(hdc, 30, 191, L"Избегать повторений", lstrlen(L"Избегать повторений"));
 
-			EndPaint(hWindow, &ps);
+			EndPaint(wnd, &ps);
 			break;
 		}
 
@@ -546,21 +804,25 @@ LRESULT CALLBACK mainWindowProcedure(HWND hWindow, UINT uMsg, WPARAM wParam, LPA
 		// Трюк ниже позволяет перетаскивать окно за любую часть окна:
 		case WM_LBUTTONDOWN: // Ловим нажатие левой кнопки мыши
 			// Отправляемое сообщение буквально значит "Нажата ЛКМ на заголовке окна":
-			SendMessage(hWindow, WM_NCLBUTTONDOWN, HTCAPTION, NULL);
+			SendMessage(wnd, WM_NCLBUTTONDOWN, HTCAPTION, NULL);
 			break;
 
 		default:
-			return DefWindowProc(hWindow, uMsg, wParam, lParam);
+			return DefWindowProc(wnd, msg, w_param, l_param);
 		}
 
 	return 0;
 }
 
 
-void handleError(DWORD uIdEror)
+void
+::handle_error(const ::DWORD id)
 {
 	wchar_t szMsg[64]{};
-	wsprintf(szMsg, L"Приложение завершает работу с ошибкой. ID ошибки: %u.", uIdEror);
-	MessageBox(NULL, szMsg, L"Ошибка:", MB_ICONERROR);
-	ExitProcess(EXIT_FAILURE);
+
+	::wsprintfW(szMsg, L"Приложение завершает работу с " 
+					   "ошибкой. ID ошибки: %u.", id);
+
+	::MessageBoxW(nullptr, szMsg, L"Ошибка:", MB_ICONERROR);
+	::ExitProcess(EXIT_FAILURE);
 }
