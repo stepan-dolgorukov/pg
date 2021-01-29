@@ -12,7 +12,6 @@ void smooth_wnd_show(const HWND wnd)
 		::SetLayeredWindowAttributes(wnd, 0, i, LWA_ALPHA);
 		::Sleep(1); // !!!
 	}
-
 	return;
 }
 

@@ -1,4 +1,5 @@
 ﻿#include <random> // (std::random_device, std::mt19937)
+#include <cctype> // std::tolower
 
 char** generate_passwords(
 	std::size_t amount,
@@ -99,7 +100,7 @@ char** generate_passwords(
 			// % - деление с остатком
 			currentChar = alphabet[mersenne() % uNullTerminatorPos];
 
-			if (avoidRepeat && tolower(previousChar) == tolower(currentChar)) 
+			if (avoidRepeat && std::tolower(previousChar) == std::tolower(currentChar)) 
 			{ // если символы совпали, то ...
 				--k; // ... возвращаемся на шаг назад. На следующем шаге символ будет перезаписан в массив
 			}
