@@ -3,14 +3,21 @@
 #include <cstdint>
 #include <utility>
 
+#include <chrono>
+#include <thread>
+
 #include <Windows.h>
 
 void smooth_wnd_show(const HWND wnd)
 {
 	for (std::uint16_t i{ 0u }; i <= 255u; i++)
 	{
-		::SetLayeredWindowAttributes(wnd, 0, i, LWA_ALPHA);
-		::Sleep(1); // !!!
+		::SetLayeredWindowAttributes(wnd, 0, static_cast<BYTE>(i), LWA_ALPHA);
+
+		if (i % 2u == 0u)
+		{
+			std::this_thread::sleep_for(std::chrono::microseconds(1u));
+		}
 	}
 	return;
 }
@@ -21,8 +28,12 @@ void smooth_wnd_hide(
 {
 	for (std::int16_t i{ 255u }; i > 0u; i--)
 	{
-		SetLayeredWindowAttributes(wnd, 0, i, LWA_ALPHA);
-		Sleep(1); // !!!
+		SetLayeredWindowAttributes(wnd, 0, static_cast<BYTE>(i), LWA_ALPHA);
+		
+		if (i % 2u == 0u)
+		{
+			std::this_thread::sleep_for(std::chrono::microseconds(1u));
+		}
 	}
 
 	if (close) 
@@ -37,7 +48,8 @@ void smooth_wnd_hide(
 	::WNDPROC wnd_proc,
 	::HINSTANCE inst)
 {
-	WNDCLASSEXW wc{};
+	::WNDCLASSEXW wc{};
+
 	wc.cbClsExtra = NULL;
 	wc.cbSize = sizeof(WNDCLASSEXW);
 	wc.cbWndExtra = NULL;
