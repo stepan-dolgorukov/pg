@@ -13,6 +13,56 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// Neutral resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_ABOUT_ICON          BITMAP                  "Resources\\about_app_logo.bmp"
+
+IDB_CLOSE_BUTTON        BITMAP                  "Resources\\close_button.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+APP_ICON_LARGE          ICON                    "Resources\\app_logo.ico"
+
+APP_ICON                ICON                    "Resources\\app_logo_sm.ico"
+
+#endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral (Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_MINIMIZE_BUTTON     BITMAP                  "Resources\\minimize_button.bmp"
+
+#endif    // Neutral (Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -43,30 +93,6 @@ BEGIN
 END
 
 #endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_ABOUT_ICON          BITMAP                  "Resources\\about_app_logo.bmp"
-
-IDB_CLOSE_BUTTON        BITMAP                  "Resources\\close_button.bmp"
-
-IDB_MINIMIZE_BUTTON     BITMAP                  "Resources\\minimize_button.bmp"
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-APP_ICON_LARGE          ICON                    "Resources\\app_logo.ico"
-
-APP_ICON                ICON                    "Resources\\app_logo_sm.ico"
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
