@@ -24,19 +24,21 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include <CommCtrl.h> // SetWindowSubclass
 
 ::LRESULT __stdcall main_wnd_proc(
-    ::HWND wnd,
-    ::UINT msg,
-    ::WPARAM wparam,
-    ::LPARAM lparam);
+    const ::HWND wnd,
+    const ::UINT msg,
+    const ::WPARAM wparam,
+    const ::LPARAM lparam);
 
 void handle_error(const ::DWORD id);
 
 int __stdcall wWinMain(
-    ::HINSTANCE inst,
-    ::HINSTANCE prev_inst,
-    ::LPWSTR cmd_line,
-    int cmd_show)
+    const ::HINSTANCE inst,
+    const ::HINSTANCE prev_inst,
+    const ::LPWSTR cmd_line,
+    const int cmd_show)
 {
+    // Чтобы избежать лишних для нас предупреждений, ...
+    // ... пометим неиспользуемые параметры.
     UNREFERENCED_PARAMETER(prev_inst);
     UNREFERENCED_PARAMETER(cmd_line);
     UNREFERENCED_PARAMETER(cmd_show);
@@ -52,9 +54,9 @@ int __stdcall wWinMain(
     };
 
     // Проверка, позволяющая избегать запуска ...
-    // ... нескольких экземпляров приложения.
-    if (nullptr == inst_mutex ||
-    ERROR_ALREADY_EXISTS == ::GetLastError())
+    // ... нескольких экземпляров приложения:
+    if (nullptr == inst_mutex || 
+        ERROR_ALREADY_EXISTS == ::GetLastError())
     {
         const ::HWND wnd{ FindWindowW(
             main_wnd_class_name.c_str(),
@@ -70,22 +72,23 @@ int __stdcall wWinMain(
         return EXIT_SUCCESS;
     }
 
-    // Регистрация класса окна.
+    // Регистрация класса основного окна:
     const ATOM reg_res{ ::reg_wnd_class(
         main_wnd_class_name.c_str(),
         main_wnd_proc,
         inst)
     };
 
-    if (!reg_res)
+    // Если не удалось зарегистрировать класс:
+    if (0u == reg_res)
     {
         ::handle_error(::GetLastError());
     }
 
-    // Размеры окна.
-    const std::size_t
-        main_wnd_w{ 250u }, // ширина
-        main_wnd_h{ 315u }; // высота
+    // Задаем размеры окна:
+    const std::uint16_t
+        main_wnd_w{ 250u }, // ширина;
+        main_wnd_h{ 315u }; // высота.
 
     const auto pos_pair{ ::get_wnd_center(
         main_wnd_w,
@@ -108,31 +111,31 @@ int __stdcall wWinMain(
     };
 
     // Неудачная инициализация главного окна.
-	if (nullptr == main_wnd)
-	{
-		::handle_error(::GetLastError());
-	}
+    if (nullptr == main_wnd)
+    {
+        ::handle_error(::GetLastError());
+    }
 
-	::ShowWindow(main_wnd, SW_SHOWNORMAL);
-	::UpdateWindow(main_wnd);
+    ::ShowWindow(main_wnd, SW_SHOWNORMAL);
+    ::UpdateWindow(main_wnd);
 
     // Цикл оконных сообщений.
-	MSG msg{};
+    MSG msg{};
 
-	while (::GetMessageW(&msg, nullptr, 0u, 0u))
-	{
-		::TranslateMessage(&msg);
-		::DispatchMessageW(&msg);
-	}
+    while (::GetMessageW(&msg, nullptr, 0u, 0u))
+    {
+        ::TranslateMessage(&msg);
+        ::DispatchMessageW(&msg);
+    }
 
-	return static_cast<int>(msg.wParam);
+    return static_cast<int>(msg.wParam);
 }
 
 ::LRESULT __stdcall ::main_wnd_proc(
-	::HWND wnd,
-	::UINT msg,
-	::WPARAM w_param,
-	::LPARAM l_param)
+    const ::HWND wnd,
+    const ::UINT msg,
+    const ::WPARAM w_param,
+    const ::LPARAM l_param)
 {
 	static bool check_box_vals[5u] = { true, true, true, true, true };
 	static ::HWND 
