@@ -522,14 +522,14 @@ int __stdcall wWinMain(
 					pass_amnt = std::atoi(input_pass_amnt);
 					pass_len = std::atoi(input_pass_len);
 
-					if (0u == pass_amnt &&
-						0u == pass_len)
-					{
+                    if ((pass_amnt < ::MIN_PASSWORDS_AMOUNT || pass_amnt > ::MAX_PASSWORDS_AMOUNT) &&
+                        (pass_len < ::MIN_PASSWORD_LENGTH || pass_len > ::MAX_PASSWORD_LENGTH))
+                    {
                         wchar_t error_msg[256u]{ 0u };
                         ::wsprintfW(
                             error_msg,
                             L"Поля «Кол-во паролей» и «Длина каждого пароля».\n"
-                            L"Все введённые значения нулевые.\n"
+                            L"Введённые значения в этих формах не соответствуют ограничениям.\n"
                             L"Минимальное кол-во паролей: %u, максимальное: %u.\n"
                             L"Минимальная длина пароля: %u, максимальная: %u.",
                             ::MIN_PASSWORDS_AMOUNT,
@@ -546,13 +546,13 @@ int __stdcall wWinMain(
                         );
 
                         break;
-					}
+                    }
 
-					else
-					{
-						if (pass_amnt < ::MIN_PASSWORDS_AMOUNT ||
-							pass_amnt > ::MAX_PASSWORDS_AMOUNT)
-						{
+                    else
+                    {
+                        if (pass_amnt < ::MIN_PASSWORDS_AMOUNT ||
+                            pass_amnt > ::MAX_PASSWORDS_AMOUNT)
+                        {
                             wchar_t error_msg[256u]{ 0u };
                             ::wsprintfW(
                                 error_msg,
