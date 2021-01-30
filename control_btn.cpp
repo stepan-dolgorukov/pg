@@ -14,12 +14,12 @@
 	switch (msg)
 	{
 		case WM_MOUSEHOVER:
-			SendMessage(wnd, WM_SETCURSOR, NULL, NULL);
+			::SendMessageW(wnd, WM_SETCURSOR, NULL, NULL);
 			break;
 
 		case WM_SETCURSOR:
 		{
-			static ::HCURSOR cursor{ ::LoadCursorW(nullptr, IDC_HAND) };
+			static const ::HCURSOR cursor{ ::LoadCursorW(nullptr, IDC_HAND) };
 			::SetCursor(cursor);
 			break;
 		}

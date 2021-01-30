@@ -137,227 +137,245 @@ int __stdcall wWinMain(
     const ::WPARAM w_param,
     const ::LPARAM l_param)
 {
-	static bool check_box_vals[5u] = { true, true, true, true, true };
-	static ::HWND 
-		pass_amnt_form{}, 
-		pass_len_form{};
+    // По умолчанию все чекбоксы приведены в состояние "ВКЛ".
+    static bool check_box_vals[5u] = {1u, 1u, 1u, 1u, 1u};
 
-	// объявляем переменные под шрифты, которые будут задействованы в сообщении WM_PAINT
-	// шрифты инициализируются в сообщении WM_CREATE
-	static ::HFONT
-		caption_font{},
-		text_font{};
+    static ::HWND
+        pass_amnt_form{},
+        pass_len_form{};
 
-	// !!!
-	// название класса и заголовок окна "О программе". Вынесено в эту область ...
-	// ... чтобы не приходилось корректировать проверку на существование (FindWindow) ...
-	// окна при дальнейшем изменении названия класса или заголовка.
-	static ::LPCWSTR
-		info_wnd_class_name{ L"About pg" },
-		info_wnd_caption{ L"About pg" };
+    // объявляем переменные под шрифты, которые будут задействованы в сообщении WM_PAINT
+    // шрифты инициализируются в сообщении WM_CREATE
+    static ::HFONT
+        caption_font{},
+        text_font{};
 
-	static const ::HINSTANCE
-		inst{ GetModuleHandleW(nullptr) };
+    // !!!
+    // название класса и заголовок окна "О программе". Вынесено в эту область ...
+    // ... чтобы не приходилось корректировать проверку на существование (FindWindow) ...
+    // окна при дальнейшем изменении названия класса или заголовка.
+    static ::LPCWSTR
+        info_wnd_class_name{ L"About pg" },
+        info_wnd_caption{ L"About pg" };
 
-	switch (msg)
-	{
-		// Плавная анимация появления.
-		case WM_SIZE:
-		{
-			if (SIZE_RESTORED == w_param)
-			{
-				std::thread thr([wnd] {
-					::smooth_wnd_show(wnd);
-				});
+    static const ::HINSTANCE
+        inst{ GetModuleHandleW(nullptr) };
 
-				thr.detach();
-			}
+    switch (msg)
+    {
+        // Плавная анимация появления.
+        case WM_SIZE:
+        {
+            if (SIZE_RESTORED == w_param)
+            {
+                std::thread thr([wnd] {
+                    ::smooth_wnd_show(wnd);
+                });
 
-			break;
-		}
+            thr.detach();
+            }
 
-		// Устанавливаем соответствующий курсор, когда пользователь ...
-		// ... перетаскивает окно.
-		case WM_MOVING:
-		{
-			static const ::HCURSOR cursor{ ::LoadCursorW(nullptr, IDC_SIZEALL) };
-			::SetCursor(cursor);
-			break;
-		}
+            break;
+        }
 
-		case WM_CREATE:
-		{
-			caption_font = ::CreateFontW(
-                22,                         // высота шрифта;
-                0,                          // средняя ширина символа;
-				0,                          // угол наклона;
-				0,                          // угол ориентации базисной линии;
-				FW_NORMAL,                  // толщина шрифта;
-				FW_DONTCARE,                // описатель параметра курсивного шрифта;
-				0,                          // описатель параметра подчеркивания;
-				0,                          // описать параметра зачеркивания;
-				DEFAULT_CHARSET,            // идентификатор набора символов;
-				OUT_TT_ONLY_PRECIS,         // точность вывода;
-				CLIP_CHARACTER_PRECIS,      // точность отсечения;
-				PROOF_QUALITY,              // качество вывода;
-				FF_MODERN,                  // шаг между символами шрифта и семейство;
-				L"Segoe UI");               // имя гарнитуры шрифта.
+        // Устанавливаем соответствующий курсор, когда ...
+        // ... пользователь перетаскивает окно.
+        case WM_MOVING:
+        {
+            static const ::HCURSOR cursor{
+                ::LoadCursorW(nullptr, IDC_SIZEALL)
+            };
 
-			text_font = ::CreateFontW(
-				18,
-				0,
-				0,
-				0,
-				FW_NORMAL,
-				FW_DONTCARE,
-				0,
-				0,
-				DEFAULT_CHARSET,
-				OUT_TT_ONLY_PRECIS,
-				CLIP_CHARACTER_PRECIS,
-				PROOF_QUALITY,
-				FF_MODERN,
-				L"Segoe UI");
+            ::SetCursor(cursor);
+            break;
+        }
 
-			// кнопка "Закрыть" (красного цвета):
-			const ::HWND close_btn{ ::CreateWindowExW(
-				0u,
-				L"Button",
-				NULL,
-				WS_CHILD | WS_VISIBLE | BS_BITMAP,
-				220,
-				5,
-				25,
-				25,
-				wnd,
-				reinterpret_cast<::HMENU>(::CONTROLS_IDS::CLOSE_BUTTON),
-				inst,
-				nullptr) };
+        case WM_CREATE:
+        {
+            caption_font = ::CreateFontW(
+                22,                    // высота шрифта;
+                0,                     // средняя ширина символа;
+                0,                     // угол наклона;
+                0,                     // угол ориентации базисной линии;
+                FW_NORMAL,             // толщина шрифта;
+                FW_DONTCARE,           // описатель параметра курсивного шрифта;
+                0,                     // описатель параметра подчеркивания;
+                0,                     // описать параметра зачеркивания;
+                DEFAULT_CHARSET,       // идентификатор набора символов;
+                OUT_TT_ONLY_PRECIS,    // точность вывода;
+                CLIP_CHARACTER_PRECIS, // точность отсечения;
+                PROOF_QUALITY,         // качество вывода;
+                FF_MODERN,             // шаг между символами шрифта и семейство;
+                L"Segoe UI"            // имя гарнитуры шрифта.
+            );
 
-			// подгружаем иконку кнопки из ресурсов:
-			const ::HBITMAP close_btn_bmp{ ::LoadBitmapW(
-				inst,
-				MAKEINTRESOURCEW(IDB_CLOSE_BUTTON)) };
+            text_font = ::CreateFontW(
+                18,
+                0,
+                0,
+                0,
+                FW_NORMAL,
+                FW_DONTCARE,
+                0,
+                0,
+                DEFAULT_CHARSET,
+                OUT_TT_ONLY_PRECIS,
+                CLIP_CHARACTER_PRECIS,
+                PROOF_QUALITY,
+                FF_MODERN,
+                L"Segoe UI"
+            );
 
-			// устанавливаем иконку кнопке:
-			::SendMessageW(
-				close_btn,
-				BM_SETIMAGE,
-				IMAGE_BITMAP,
-				reinterpret_cast<::LPARAM>(close_btn_bmp));
+            // кнопка "Закрыть" (красного цвета):
+            const ::HWND close_btn{ ::CreateWindowExW(
+                0u,
+                L"Button",
+                nullptr,
+                WS_CHILD | WS_VISIBLE | BS_BITMAP,
+                220,
+                5,
+                25,
+                25,
+                wnd,
+                reinterpret_cast<::HMENU>(::CONTROLS_IDS::CLOSE_BUTTON),
+                inst,
+                nullptr)
+            };
 
-			// Выгружаем битмап из памяти:
-			::DeleteObject(close_btn_bmp);
+            // подгружаем иконку кнопки из ресурсов:
+            const ::HBITMAP close_btn_bmp{ ::LoadBitmapW(
+                inst,
+                MAKEINTRESOURCEW(IDB_CLOSE_BUTTON))
+            };
 
-			// "Кнопочная" процедура для отработки необходимых сообщений:
-			::SetWindowSubclass(
-				close_btn,
-				control_btn_proc,
-				0u,
-				0u);
+            // устанавливаем иконку кнопке:
+            ::SendMessageW(
+                close_btn,
+                BM_SETIMAGE,
+                IMAGE_BITMAP,
+                reinterpret_cast<::LPARAM>(close_btn_bmp)
+            );
 
-			// Кнопка "Свернуть" (жёлтого цвета):
-			const ::HWND minimize_btn{ ::CreateWindowExW(
-				0u,
-				L"Button",
-				nullptr,
-				WS_CHILD | WS_VISIBLE | BS_BITMAP,
-				190,
-				5,
-				25,
-				25, 
-				wnd,
-				reinterpret_cast<::HMENU>(::CONTROLS_IDS::MINIMIZE_BUTTON),
-				inst,
-				nullptr)
-			};
+            // Выгружаем битмап из памяти:
+            ::DeleteObject(close_btn_bmp);
 
-			// Подгружаем битмап для кнопки из ресурсов:
-			const ::HBITMAP minimize_btn_bmp{ ::LoadBitmapW(
-				inst,
-				MAKEINTRESOURCEW(IDB_MINIMIZE_BUTTON))
-			};
+            // "Кнопочная" процедура для отработки необходимых сообщений:
+            ::SetWindowSubclass(
+                close_btn,
+                control_btn_proc,
+                0u,
+                0u
+            );
 
-			// Устанавливаем загруженный битмап кнопке:
-			::SendMessageW(
-				minimize_btn,
-				BM_SETIMAGE,
-				IMAGE_BITMAP,
-				reinterpret_cast<::LPARAM>(minimize_btn_bmp));
+            // Кнопка "Свернуть" (жёлтого цвета):
+            const ::HWND minimize_btn{ ::CreateWindowExW(
+                0u,
+                L"Button",
+                nullptr,
+                WS_CHILD | WS_VISIBLE | BS_BITMAP,
+                190,
+                5,
+                25,
+                25, 
+                wnd,
+                reinterpret_cast<::HMENU>(::CONTROLS_IDS::MINIMIZE_BUTTON),
+                inst,
+                nullptr)
+            };
 
-			// Выгружаем битмап из памяти:
-			::DeleteObject(minimize_btn_bmp);
+            // Подгружаем битмап для кнопки из ресурсов:
+            const ::HBITMAP minimize_btn_bmp{ ::LoadBitmapW(
+                inst,
+                MAKEINTRESOURCEW(IDB_MINIMIZE_BUTTON))
+            };
 
-			// Аналогично с кнопкой "Свернуть":
-			::SetWindowSubclass(
-				minimize_btn,
-				control_btn_proc,
-				0u,
-				0u);
+            // Устанавливаем загруженный битмап кнопке:
+            ::SendMessageW(
+                minimize_btn,
+                BM_SETIMAGE,
+                IMAGE_BITMAP,
+                reinterpret_cast<::LPARAM>(minimize_btn_bmp)
+            );
 
-			// Поле ввода "Количество паролей":
-			pass_amnt_form = ::CreateWindowExW(
-				0u,
-				L"Edit",
-				L"64",
-				WS_CHILD | WS_VISIBLE | ES_NUMBER,
-				195,
-				49,
-				40,
-				20,
-				wnd,
-				nullptr,
-				inst,
-				nullptr);
+            // Выгружаем битмап из памяти:
+            ::DeleteObject(minimize_btn_bmp);
 
-			::SendMessageW(
-				pass_amnt_form,
-				WM_SETFONT,
-				reinterpret_cast<::WPARAM>(text_font),
-				0);
+            // Аналогично с кнопкой "Свернуть":
+            ::SetWindowSubclass(
+                minimize_btn,
+                control_btn_proc,
+                0u,
+                0u
+            );
 
-			// Поле ввода "Длина каждого пароля":
-			pass_len_form = ::CreateWindowExW(
-				0u,
-				L"Edit",
-				L"32",
-				WS_CHILD | WS_VISIBLE | ES_NUMBER,
-				195,
-				72,
-				40,
-				20,
-				wnd,
-				nullptr,
-				inst,
-				nullptr);
+            // Поле ввода "Количество паролей":
+            pass_amnt_form = ::CreateWindowExW(
+                0u,
+                L"Edit",
+                L"64",
+                WS_CHILD | WS_VISIBLE | ES_NUMBER,
+                195,
+                49,
+                40,
+                20,
+                wnd,
+                nullptr,
+                inst,
+                nullptr
+            );
 
-			::SendMessageW(
-				pass_len_form,
-				WM_SETFONT,
-				reinterpret_cast<::WPARAM>(text_font),
-				0);
+            ::SendMessageW(
+                pass_amnt_form,
+                WM_SETFONT,
+                reinterpret_cast<::WPARAM>(text_font),
+                0
+            );
 
-			// Создание чекбоксов:
-			std::size_t h_offset{ 100u };
+            // Поле ввода "Длина каждого пароля":
+            pass_len_form = ::CreateWindowExW(
+                0u,
+                L"Edit",
+                L"32",
+                WS_CHILD | WS_VISIBLE | ES_NUMBER,
+                195,
+                72,
+                40,
+                20,
+                wnd,
+                nullptr,
+                inst,
+                nullptr
+            );
 
-			for (std::uint8_t i{ 3u }; i <= 7u; i++)
-			{
-				::CreateWindowExW(
-					0u,
-					L"Button",
-					nullptr,
-					WS_CHILD | WS_VISIBLE | BS_CHECKBOX,
-					10,
-					h_offset,
-					15,
-					25, wnd,
-					reinterpret_cast<::HMENU>(i),
-					inst,
-					nullptr);
+            ::SendMessageW(
+                pass_len_form,
+                WM_SETFONT,
+                reinterpret_cast<::WPARAM>(text_font),
+                0
+            );
 
-				CheckDlgButton(wnd, i, BST_CHECKED);
-				h_offset += 22u;
-			}
+            // Создание чекбоксов:
+            std::size_t h_offset{ 100u };
+
+            for (std::uint8_t i{ 3u }; i <= 7u; i++)
+            {
+                ::CreateWindowExW(
+                    0u,
+                    L"Button",
+                    nullptr,
+                    WS_CHILD | WS_VISIBLE | BS_CHECKBOX,
+                    10,
+                    h_offset,
+                    15,
+                    25, wnd,
+                    reinterpret_cast<::HMENU>(i),
+                    inst,
+                    nullptr
+                );
+
+                ::CheckDlgButton(wnd, i, BST_CHECKED);
+                h_offset += 22u;
+            }
 
 			// Кнопка "Сгенерировать пароли":
 			const ::HWND generate_btn{ CreateWindowExW(
@@ -474,8 +492,8 @@ int __stdcall wWinMain(
 					{
 						::MessageBoxW(
 							wnd,
-							L"Галочка должна стоять как минимум у одного из чекбоксов. \
-							Чекбокс \"Избегать повторений\" не считается.",
+							L"Галочка должна стоять как минимум у одного из чекбоксов.\n"
+                            L"Чекбокс \"Избегать повторений\" не считается.",
 							L"Ошибка:", MB_ICONERROR);
 						break;
 					}
@@ -508,10 +526,10 @@ int __stdcall wWinMain(
 						0u == pass_len)
 					{
 						MessageBox(wnd,
-							L"Поля «Кол-во паролей» и «Длина каждого пароля». \
-							 Введённые значения не соответствуют ограничениям.\n\
-							 Минимальное кол-во паролей: 5, максимальное: 4096.\n\
-							 Минимальная длина пароля: 4, максимальная: 256.",
+							L"Поля «Кол-во паролей» и «Длина каждого пароля».\n"
+							L"Введённые значения не соответствуют ограничениям.\n"
+							L"Минимальное кол-во паролей: 1, максимальное: 4096.\n"
+							L"Минимальная длина пароля: 4, максимальная: 256.",
 							L"Ошибка ввода:", MB_ICONERROR);
 						break;
 					}
@@ -523,8 +541,8 @@ int __stdcall wWinMain(
 						{
 							::MessageBoxW(
 								wnd,
-								L"Введеное значение не соответствует ограничениям.\n\
-								 Минимальное кол-во паролей: 1, максимальное: 4096.",
+								L"Введеное значение не соответствует ограничениям.\n"
+								L"Минимальное кол-во паролей: 1, максимальное: 4096.",
 								L"Ошибка ввода:",
 								MB_ICONERROR);
 
@@ -537,8 +555,8 @@ int __stdcall wWinMain(
 						{
 							::MessageBoxW(
 								wnd,
-								L"Введеное значение не соответствует ограничениям\n\
-								 Минимальная длина пароля: 4, максимальная: 256.",
+								L"Введеное значение не соответствует ограничениям\n"
+								L"Минимальная длина пароля: 4, максимальная: 256.",
 								L"Ошибка ввода:",
 								MB_ICONERROR);
 
@@ -790,12 +808,12 @@ int __stdcall wWinMain(
 			}
 
 			// Обработка чекбоксов:
-			if (LOWORD(w_param) >= 3 && LOWORD(w_param) <= 7) // [3; 7] - чекбоксы
+			if (LOWORD(w_param) >= 3u && LOWORD(w_param) <= 7u) // [3; 7] - чекбоксы
 			{
 				const ::UINT result { ::IsDlgButtonChecked(wnd, LOWORD(w_param)) }; // получаем текущее состояние
 
-				::CheckDlgButton(wnd, LOWORD(w_param), !result); // меняем визуальное состояние
-				check_box_vals[LOWORD(w_param) - 3] = !result; // присваиваем соответствующее значение массиву логических значений чекбоксов
+                ::CheckDlgButton(wnd, LOWORD(w_param), !result); // меняем визуальное состояние
+				check_box_vals[LOWORD(w_param) - 3u] = !result; // присваиваем соответствующее значение массиву логических значений чекбоксов
 			}
 		}
 
