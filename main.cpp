@@ -5,7 +5,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #pragma comment(lib, "comctl32.lib")
 
-#include "constants.h" // controls ids
+#include "constants.h"
 #include "about_app_wnd.h"
 #include "info_btn.h"
 #include "wnd_util.h"
@@ -525,42 +525,73 @@ int __stdcall wWinMain(
 					if (0u == pass_amnt &&
 						0u == pass_len)
 					{
-						MessageBox(wnd,
-							L"Поля «Кол-во паролей» и «Длина каждого пароля».\n"
-							L"Введённые значения не соответствуют ограничениям.\n"
-							L"Минимальное кол-во паролей: 1, максимальное: 4096.\n"
-							L"Минимальная длина пароля: 4, максимальная: 256.",
-							L"Ошибка ввода:", MB_ICONERROR);
-						break;
+                        wchar_t error_msg[256u]{ 0u };
+                        ::wsprintfW(
+                            error_msg,
+                            L"Поля «Кол-во паролей» и «Длина каждого пароля».\n"
+                            L"Все введённые значения нулевые.\n"
+                            L"Минимальное кол-во паролей: %u, максимальное: %u.\n"
+                            L"Минимальная длина пароля: %u, максимальная: %u.",
+                            ::MIN_PASSWORDS_AMOUNT,
+                            ::MAX_PASSWORDS_AMOUNT,
+                            ::MIN_PASSWORD_LENGTH,
+                            ::MAX_PASSWORD_LENGTH
+                        );
+
+                        ::MessageBoxW(
+                            wnd,
+                            error_msg,
+                            L"Ошибка ввода:",
+                            MB_ICONERROR
+                        );
+
+                        break;
 					}
 
 					else
 					{
-						if (0u == pass_amnt ||
-							4096u < pass_amnt)
+						if (pass_amnt < ::MIN_PASSWORDS_AMOUNT ||
+							pass_amnt > ::MAX_PASSWORDS_AMOUNT)
 						{
-							::MessageBoxW(
-								wnd,
-								L"Введеное значение не соответствует ограничениям.\n"
-								L"Минимальное кол-во паролей: 1, максимальное: 4096.",
-								L"Ошибка ввода:",
-								MB_ICONERROR);
+                            wchar_t error_msg[256u]{ 0u };
+                            ::wsprintfW(
+                                error_msg,
+                                L"Введеное значение не соответствует ограничениям.\n"
+                                L"Минимальное кол-во паролей: %u, максимальное: %u.",
+                                ::MIN_PASSWORDS_AMOUNT,
+                                ::MAX_PASSWORDS_AMOUNT
+                            );
+
+                            ::MessageBoxW(
+                                wnd,
+                                error_msg,
+                                L"Ошибка ввода:",
+                                MB_ICONERROR
+                            );
 
 							break;
 						}
 
-						if (0u == pass_len ||
-							4u > pass_len ||
-							256 < pass_len)
+						if (pass_len < ::MIN_PASSWORD_LENGTH ||
+							pass_len > ::MAX_PASSWORD_LENGTH)
 						{
-							::MessageBoxW(
-								wnd,
-								L"Введеное значение не соответствует ограничениям\n"
-								L"Минимальная длина пароля: 4, максимальная: 256.",
-								L"Ошибка ввода:",
-								MB_ICONERROR);
+                            wchar_t error_msg[256u]{ 0u };
+                            ::wsprintfW(
+                                error_msg,
+                                L"Введеное значение не соответствует ограничениям.\n"
+                                L"Минимальная длина парля: %u, максимальная: %u.",
+                                ::MIN_PASSWORD_LENGTH,
+                                ::MAX_PASSWORD_LENGTH
+                            );
 
-							break;
+                            ::MessageBoxW(
+                                wnd,
+	                            error_msg,
+                                L"Ошибка ввода:",
+                                MB_ICONERROR
+                            );
+
+                            break;
 						}
 					}
 
